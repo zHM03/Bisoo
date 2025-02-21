@@ -1,23 +1,16 @@
-# Python 3.9 tabanlı bir imaj kullanıyoruz
-FROM python:3.9
+FROM python:3.9-slim
 
-# Sistemde gerekli bağımlılıkları kuruyoruz
-RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    libsm6 \
-    libxext6
+# Sistem bağımlılıklarını yükleyelim
+RUN apt-get update && apt-get install -y ffmpeg
 
-# Çalışma dizinini belirliyoruz
+# Çalışma dizini oluştur
 WORKDIR /app
 
-# requirements.txt dosyasını kopyalıyoruz
+# Gereksinimleri yükle
 COPY requirements.txt .
-
-# Bağımlılıkları kuruyoruz
 RUN pip install -r requirements.txt
 
-# Proje dosyalarını kopyalıyoruz
+# Uygulama dosyalarını kopyala
 COPY . .
 
-# Uygulama başlatma komutu
-CMD ["python", "app.py"]
+CMD ["python", "main.py"]

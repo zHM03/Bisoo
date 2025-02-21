@@ -1,125 +1,96 @@
-import asyncio
 import discord
 from discord.ext import commands
-from yt_dlp import YoutubeDL
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
+import yt_dlp as youtube_dl
+import asyncio
 import os
-from dotenv import load_dotenv
-from datetime import datetime
-
-load_dotenv()
-
-# Spotify API ayarları
-sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
-    client_id=os.getenv('SPOTIPY_CLIENT_ID'),
-    client_secret=os.getenv('SPOTIPY_CLIENT_SECRET')
-))
 
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.voice_client = None
-        self.log_channel_name = "biso-log"  # Loglar için kanal adı
-        self.ytdl_opts = {
+        self.song_queue = []  # Şarkı kuyruğu listesi
+
+    async def after_play(self, ctx):
+        """Sıradaki şarkıyı başlatır veya botu kanaldan çıkarır."""
+        if self.song_queue:
+            self.song_queue.pop(0)  # Çalan şarkıyı kuyruğundan çıkar
+            await self.play_next(ctx)
+        else:
+            voice_client = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
+            if voice_client:
+                # Eğer ses client'ı varsa, ses kanalından çık
+                await voice_client.disconnect()
+                print(f"Bot {ctx.guild.name} kanalından çıktı.")  # Kontrol amacıyla çıktı mesajı
+            self.song_queue = []  # Kuyruğu sıfırla
+
+    async def play_next(self, ctx):
+        """Sıradaki şarkıyı oynatır."""
+        if not self.song_queue:
+            return  # Liste boşsa bir şey yapma
+
+        url, title = self.song_queue[0]  # İlk şarkıyı al
+        voice_client = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
+
+        if not voice_client:
+            voice_client = await ctx.author.voice.channel.connect()
+
+        ydl_opts = {
             'format': 'bestaudio/best',
-            'quiet': True,
-            'extractaudio': True,
-            'audioformat': 'mp3',
-            'outtmpl': '%(id)s.%(ext)s',
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '256',
-            }],
+            'outtmpl': 'downloads/%(id)s.%(ext)s',
+            'noplaylist': True,
         }
 
-    async def get_log_channel(self, guild):
-        """Belirtilen guild'deki log kanalını bul"""
-        return discord.utils.get(guild.text_channels, name=self.log_channel_name)
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            file = f"downloads/{info['id']}.webm"
 
-    def log_message(self, message):
-        """Log mesajını tarih, saat ile birlikte formatlayarak döndür"""
-        now = datetime.now()
-        timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
-        return f"[{timestamp}] {message}"
+        def after_callback(e):
+            asyncio.run_coroutine_threadsafe(self.after_play(ctx), self.bot.loop)
 
-    async def log_error(self, message):
-        """Log kanalına hata mesajı gönder"""
-        formatted_message = self.log_message(message)
-        for guild in self.bot.guilds:
-            log_channel = await self.get_log_channel(guild)
-            if log_channel:
-                await log_channel.send(f"**Log:** {formatted_message}")
+        voice_client.play(discord.FFmpegPCMAudio(file), after=after_callback)
 
-    async def play_song(self, ctx, audio_url, song_title):
-        """Şarkıyı çalmaya başla"""
-        if not ctx.author.voice:
-            await ctx.message.add_reaction('❌')  # Hata: Sesli kanalda değil
-            await self.log_error(f"'{ctx.author}' şarkı çalmaya çalıştı ancak sesli kanalda değildi.")
-            return
+        # Embed mesajı ile güncellenmiş listeyi göster
+        await self.send_queue_embed(ctx)
 
-        # Eğer bot sesli kanalda değilse bağlan
-        if not self.voice_client or not self.voice_client.is_connected():
-            self.voice_client = await ctx.author.voice.channel.connect()
-            await self.log_error(f"Biso sesli kanala bağlandı: {ctx.author.voice.channel.name}")
+        # Şarkı bitene kadar bekle
+        while voice_client.is_playing() or voice_client.is_paused():
+            await asyncio.sleep(1)
 
-        ffmpeg_options = {
-            'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-            'options': '-vn'
-        }
-
-        def after_playing(error):
-            if error:
-                self.bot.loop.create_task(self.log_error(f"Şarkı çalarken bir hata oluştu: {error}"))
-            if self.voice_client and self.voice_client.is_connected():
-                self.bot.loop.create_task(self.voice_client.disconnect())
-
-        try:
-            self.voice_client.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options), after=after_playing)
-            await ctx.message.add_reaction('✅')  # Başarılı: Şarkı çalıyor
-            await self.log_error(f"Şarkı çalıyor: '{song_title}'")
-
-        except Exception as e:
-            await ctx.message.add_reaction('❌')  # Hata: Oynatma sırasında problem
-            await self.log_error(f"Şarkıyı oynatırken bir hata oluştu: {e}")
+        # Şarkı bitince dosyayı sil
+        if os.path.exists(file):
+            os.remove(file)
 
     @commands.command()
-    async def p(self, ctx, *, link_or_song):
-        """YouTube veya Spotify bağlantısından şarkı ekler veya şarkı adıyla YouTube'dan arama yapar"""
-        with YoutubeDL(self.ytdl_opts) as ydl:
-            try:
-                if "spotify.com/track" in link_or_song:
-                    track_id = link_or_song.split('/')[-1].split('?')[0]
-                    track_info = sp.track(track_id)
-                    track_name = track_info['name']
-                    search_url = f"ytsearch:{track_name}"
-                    info = ydl.extract_info(search_url, download=False)
-                    video_url = info['entries'][0]['url']
-                elif "youtube.com/watch" in link_or_song or "youtu.be" in link_or_song:
-                    info = ydl.extract_info(link_or_song, download=False)
-                    video_url = info['url']
-                    track_name = info['title']
-                else:
-                    search_url = f"ytsearch:{link_or_song}"
-                    info = ydl.extract_info(search_url, download=False)
-                    video_url = info['entries'][0]['url']
-                    track_name = info['entries'][0]['title']
+    async def p(self, ctx, url):
+        """Şarkıyı kuyruğa ekler ve embed ile gösterir."""
+        ydl_opts = {'quiet': True}
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            title = info.get('title', 'Bilinmeyen Şarkı')
 
-                if not ctx.author.voice:
-                    await ctx.message.add_reaction('❌')
-                    await self.log_error(f"'{ctx.author}' şarkı çalmaya çalıştı ancak sesli kanalda değildi.")
-                    return
+        self.song_queue.append((url, title))  # (URL, Şarkı adı)
 
-                await self.play_song(ctx, video_url, track_name)
+        # Eğer bot şu an çalmıyorsa sıradaki şarkıyı başlat
+        if not ctx.voice_client or not ctx.voice_client.is_playing():
+            await self.play_next(ctx)
+        else:
+            await self.send_queue_embed(ctx)
 
-            except Exception as e:
-                await ctx.message.add_reaction('❌')
-            try:
-                await ctx.send("Hrrr çaldığımı görmüyon mü.")
-            except Exception as e:
-                await self.log_error(f"Bir hata oluştu: {e}")
+    @commands.command()
+    async def queue(self, ctx):
+        """Mevcut şarkı kuyruğunu gösterir."""
+        await self.send_queue_embed(ctx)
+
+    async def send_queue_embed(self, ctx):
+        """Embed mesaj olarak mevcut sırayı gösterir."""
+        if not self.song_queue:
+            await ctx.send("🎵 Şu an çalma listesinde şarkı yok.")
+            return
+
+        embed = discord.Embed(title="🎶 Şarkı Kuyruğu", color=discord.Color.orange())
+        for i, (url, title) in enumerate(self.song_queue, 1):
+            embed.add_field(name=f"{i}. {title}", value=url, inline=False)
+
+        await ctx.send(embed=embed)
 
 async def setup(bot):
-    await bot.add_cog(Music(bot))  # Music cogs'ı ekliyoruz
-
+    await bot.add_cog(Music(bot))
