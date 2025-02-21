@@ -3,6 +3,8 @@ from discord.ext import commands
 import yt_dlp as youtube_dl
 import asyncio
 import os
+import re
+from youtubesearchpython import VideosSearch  # YouTube'da arama yapmak için
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -19,7 +21,7 @@ class Music(commands.Cog):
             voice_client = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
             if voice_client and not voice_client.is_playing():
                 await voice_client.disconnect()
-                print("✅ Bot kanaldan ayrıldı!")  # Log çıktısı
+                print("✅ Bot kanaldan ayrıldı!")
 
     async def play_next(self, ctx):
         """Sıradaki şarkıyı oynatır. Kuyruk boşsa botu kanaldan çıkarır."""
@@ -53,52 +55,58 @@ class Music(commands.Cog):
                 print(f"Şarkı oynatma sırasında hata oluştu: {error}")
             self.bot.loop.create_task(self.after_play(ctx))
 
-            # Oynatma bittikten sonra dosyayı sil
             if os.path.exists(file):
                 os.remove(file)
 
         voice_client.play(discord.FFmpegPCMAudio(file), after=after_callback)
 
-        # Embed mesajı ile çalan şarkıyı göster
         embed = discord.Embed(title="🎵 Şimdi Çalıyor", description=f"**{title}**", color=discord.Color.green())
         embed.add_field(name="Bağlantı", value=url, inline=False)
         await ctx.send(embed=embed)
 
     @commands.command()
     async def p(self, ctx, url):
-        """Şarkıyı kuyruğa ekler ve eğer bot şu an çalmıyorsa başlatır."""
+        """Şarkıyı veya playlist içindeki şarkıları aratıp çalar."""
         if "playlist" in url:
-            # Playlist URL'si girildiyse, her şarkıyı teker teker ekle
+            # Playlist'teki şarkıları ismiyle bulup çalma
             ydl_opts = {'quiet': True}
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 playlist_info = ydl.extract_info(url, download=False)
                 if 'entries' in playlist_info:
                     for entry in playlist_info['entries']:
-                        song_url = entry['url']
                         song_title = entry['title']
-                        self.song_queue.append((song_url, song_title))
-            await ctx.send(f"Playlist'teki {len(playlist_info['entries'])} şarkı kuyruğa eklendi!")
-            # Playlist'teki şarkıları tek tek çal
-            for song_url, song_title in self.song_queue:
-                await self.add_song_and_play(ctx, song_url, song_title)
+                        song_artist = entry.get('artist', '')  # Bazı şarkılarda sanatçı bilgisi olmayabilir
+                        search_query = f"{song_artist} {song_title}" if song_artist else song_title
+
+                        # YouTube'da şarkıyı arayarak ilk sonucu al
+                        video_url = await self.search_youtube(search_query)
+                        if video_url:
+                            await self.add_song_and_play(ctx, video_url, song_title)
+            await ctx.send(f"🎶 Playlist'teki şarkılar YouTube'da aratılıp kuyruğa eklendi!")
         else:
-            # Tek bir şarkı eklemek için
+            # Tek bir şarkı ekleme
             ydl_opts = {'quiet': True}
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
                 title = info.get('title', 'Bilinmeyen Şarkı')
 
-            self.song_queue.append((url, title))  # (URL, Şarkı adı)
+            self.song_queue.append((url, title))
 
-            # Eğer bot şu an çalmıyorsa sıradaki şarkıyı başlat
             if not ctx.voice_client or not ctx.voice_client.is_playing():
                 await self.play_next(ctx)
+
+    async def search_youtube(self, query):
+        """YouTube'da verilen sorguyu aratır ve ilk videonun URL'sini döndürür."""
+        search = VideosSearch(query, limit=1)
+        result = await asyncio.to_thread(search.next)
+        if result and result['result']:
+            return result['result'][0]['link']
+        return None
 
     async def add_song_and_play(self, ctx, song_url, song_title):
         """Şarkıyı kuyruğa ekler ve oynatmaya başlar."""
         self.song_queue.append((song_url, song_title))
 
-        # Eğer bot şu an çalmıyorsa sıradaki şarkıyı başlat
         if not ctx.voice_client or not ctx.voice_client.is_playing():
             await self.play_next(ctx)
 
@@ -113,7 +121,7 @@ class Music(commands.Cog):
             await ctx.send("🎵 Şu an çalma listesinde şarkı yok.")
             return
 
-        embed = discord.Embed(title="🎶 Miyaaaav 🎶", color=discord.Color.orange())
+        embed = discord.Embed(title="🎶 Kuyruk 🎶", color=discord.Color.orange())
         for i, (url, title) in enumerate(self.song_queue, 1):
             embed.add_field(name=f"{i}. {title}", value=url, inline=False)
 
