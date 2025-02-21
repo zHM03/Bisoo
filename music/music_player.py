@@ -70,16 +70,9 @@ class Music(commands.Cog):
         ydl_opts = {'quiet': True}
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
+            title = info.get('title', 'Bilinmeyen Şarkı')
 
-            # Eğer URL bir playlistse
-            if 'entries' in info:
-                for entry in info['entries']:
-                    title = entry.get('title', 'Bilinmeyen Şarkı')
-                    video_url = entry.get('url')
-                    self.song_queue.append((video_url, title))  # (URL, Şarkı adı)
-            else:
-                title = info.get('title', 'Bilinmeyen Şarkı')
-                self.song_queue.append((url, title))  # Tek bir şarkı ekle
+        self.song_queue.append((url, title))  # (URL, Şarkı adı)
 
         # Eğer bot şu an çalmıyorsa sıradaki şarkıyı başlat
         if not ctx.voice_client or not ctx.voice_client.is_playing():
