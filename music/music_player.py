@@ -67,12 +67,25 @@ class Music(commands.Cog):
     @commands.command()
     async def p(self, ctx, url):
         """Şarkıyı kuyruğa ekler ve eğer bot şu an çalmıyorsa başlatır."""
-        ydl_opts = {'quiet': True}
-        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            title = info.get('title', 'Bilinmeyen Şarkı')
+        if "playlist" in url:
+            # Playlist URL'si girildiyse, tüm şarkıları al ve kuyruğa ekle
+            ydl_opts = {'quiet': True}
+            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                playlist_info = ydl.extract_info(url, download=False)
+                if 'entries' in playlist_info:
+                    for entry in playlist_info['entries']:
+                        song_url = entry['url']
+                        song_title = entry['title']
+                        self.song_queue.append((song_url, song_title))
+            await ctx.send(f"Playlist'teki {len(playlist_info['entries'])} şarkı kuyruğa eklendi!")
+        else:
+            # Tek bir şarkı eklemek için
+            ydl_opts = {'quiet': True}
+            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                title = info.get('title', 'Bilinmeyen Şarkı')
 
-        self.song_queue.append((url, title))  # (URL, Şarkı adı)
+            self.song_queue.append((url, title))  # (URL, Şarkı adı)
 
         # Eğer bot şu an çalmıyorsa sıradaki şarkıyı başlat
         if not ctx.voice_client or not ctx.voice_client.is_playing():
