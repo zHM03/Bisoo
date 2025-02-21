@@ -42,9 +42,10 @@ class Music(commands.Cog):
 
         ydl_opts = {
             'format': 'bestaudio/best',
-            'outtmpl': f'{self.temp_folder}/%(id)s.%(ext)s',
+            'outtmpl': 'downloads/%(id)s.%(ext)s',
             'noplaylist': True,
             'quiet': True,
+            'compat_opts': 'no-youtube-channel-redirect'  # YouTube yönlendirme hatalarını önler
         }
 
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
