@@ -7,25 +7,26 @@ import os
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.song_queue = []  # Şarkı kuyruğu listesi
+        self.song_queue = []  # Şarkı kuyruğu
 
     async def after_play(self, ctx):
-        """Sıradaki şarkıyı başlatır veya botu kanaldan çıkarır."""
+        """Şarkı bittikten sonra kuyruğu kontrol eder. Eğer şarkı yoksa bot kanaldan ayrılır."""
         if self.song_queue:
-            self.song_queue.pop(0)  # Çalan şarkıyı kuyruğundan çıkar
-            await self.play_next(ctx)
+            self.song_queue.pop(0)  # Mevcut şarkıyı kaldır
+            await self.play_next(ctx)  # Sıradaki şarkıyı çal
         else:
+            await asyncio.sleep(3)  # Küçük bir gecikme ekleyelim (Discord'un işlemesi için)
             voice_client = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
-            if voice_client:
-                # Eğer ses client'ı varsa, ses kanalından çık
+            if voice_client and voice_client.is_connected():
                 await voice_client.disconnect()
-                print(f"Bot {ctx.guild.name} kanalından çıktı.")  # Kontrol amacıyla çıktı mesajı
-            self.song_queue = []  # Kuyruğu sıfırla
+                print("✅ Bot kanaldan ayrıldı!")  # Log çıktısı
+            else:
+                print("❌ Bot zaten kanaldan ayrılmış.")
 
     async def play_next(self, ctx):
         """Sıradaki şarkıyı oynatır."""
         if not self.song_queue:
-            return  # Liste boşsa bir şey yapma
+            return  # Şarkı listesi boşsa çık
 
         url, title = self.song_queue[0]  # İlk şarkıyı al
         voice_client = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
@@ -37,31 +38,29 @@ class Music(commands.Cog):
             'format': 'bestaudio/best',
             'outtmpl': 'downloads/%(id)s.%(ext)s',
             'noplaylist': True,
+            'quiet': True,
         }
 
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             file = f"downloads/{info['id']}.webm"
 
-        def after_callback(e):
+        # after callback'i async fonksiyon çalıştırmak için güncellendi
+        def after_callback(error):
+            if error:
+                print(f"Şarkı oynatma sırasında hata oluştu: {error}")
             asyncio.run_coroutine_threadsafe(self.after_play(ctx), self.bot.loop)
 
         voice_client.play(discord.FFmpegPCMAudio(file), after=after_callback)
 
-        # Embed mesajı ile güncellenmiş listeyi göster
-        await self.send_queue_embed(ctx)
-
-        # Şarkı bitene kadar bekle
-        while voice_client.is_playing() or voice_client.is_paused():
-            await asyncio.sleep(1)
-
-        # Şarkı bitince dosyayı sil
-        if os.path.exists(file):
-            os.remove(file)
+        # Embed mesajı ile çalan şarkıyı göster
+        embed = discord.Embed(title="🎵 Şimdi Çalıyor", description=f"**{title}**", color=discord.Color.green())
+        embed.add_field(name="Bağlantı", value=url, inline=False)
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def p(self, ctx, url):
-        """Şarkıyı kuyruğa ekler ve embed ile gösterir."""
+        """Şarkıyı kuyruğa ekler ve eğer bot şu an çalmıyorsa başlatır."""
         ydl_opts = {'quiet': True}
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -81,7 +80,7 @@ class Music(commands.Cog):
         await self.send_queue_embed(ctx)
 
     async def send_queue_embed(self, ctx):
-        """Embed mesaj olarak mevcut sırayı gösterir."""
+        """Mevcut sırayı embed olarak gösterir."""
         if not self.song_queue:
             await ctx.send("🎵 Şu an çalma listesinde şarkı yok.")
             return
