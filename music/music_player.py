@@ -3,13 +3,14 @@ from discord.ext import commands
 import yt_dlp as youtube_dl
 import asyncio
 import os
-import re
 from youtubesearchpython import VideosSearch  # YouTube'da arama yapmak için
 
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.song_queue = []  # Şarkı kuyruğu
+        self.temp_folder = "temp"  # Geçici dosya klasörü
+        os.makedirs(self.temp_folder, exist_ok=True)
 
     async def after_play(self, ctx):
         """Şarkı bittikten sonra kuyruğu kontrol eder. Eğer şarkı yoksa bot kanaldan ayrılır."""
@@ -41,14 +42,14 @@ class Music(commands.Cog):
 
         ydl_opts = {
             'format': 'bestaudio/best',
-            'outtmpl': 'downloads/%(id)s.%(ext)s',
+            'outtmpl': f'{self.temp_folder}/%(id)s.%(ext)s',
             'noplaylist': True,
             'quiet': True,
         }
 
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
-            file = f"downloads/{info['id']}.webm"
+            file = f"{self.temp_folder}/{info['id']}.webm"
 
         def after_callback(error):
             if error:
@@ -67,38 +68,36 @@ class Music(commands.Cog):
     @commands.command()
     async def p(self, ctx, url):
         """Şarkıyı veya playlist içindeki şarkıları aratıp çalar."""
-        if "playlist" in url:
-            # Playlist'teki şarkıları ismiyle bulup çalma
-            ydl_opts = {'quiet': True}
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                playlist_info = ydl.extract_info(url, download=False)
-                if 'entries' in playlist_info:
-                    for entry in playlist_info['entries']:
-                        song_title = entry['title']
-                        song_artist = entry.get('artist', '')  # Bazı şarkılarda sanatçı bilgisi olmayabilir
-                        search_query = f"{song_artist} {song_title}" if song_artist else song_title
+        ydl_opts = {'quiet': True}
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
 
-                        # YouTube'da şarkıyı arayarak ilk sonucu al
-                        video_url = await self.search_youtube(search_query)
-                        if video_url:
-                            await self.add_song_and_play(ctx, video_url, song_title)
-            await ctx.send(f"🎶 Playlist'teki şarkılar YouTube'da aratılıp kuyruğa eklendi!")
-        else:
-            # Tek bir şarkı ekleme
-            ydl_opts = {'quiet': True}
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url, download=False)
+            if info.get('_type') == 'playlist':
+                # Playlist içindeki şarkıları bulup kuyruğa ekle
+                await ctx.send(f"🎶 Playlist bulundu! **{len(info['entries'])} şarkı ekleniyor...**")
+                for entry in info['entries']:
+                    song_title = entry.get('title', 'Bilinmeyen Şarkı')
+                    song_artist = entry.get('artist', '')  # Bazı şarkılarda sanatçı bilgisi olmayabilir
+                    search_query = f"{song_artist} {song_title}" if song_artist else song_title
+
+                    # YouTube'da şarkıyı arayarak ilk sonucu al
+                    video_url = await self.search_youtube(search_query)
+                    if video_url:
+                        await self.add_song_and_play(ctx, video_url, song_title)
+
+                await ctx.send(f"✅ Playlist'teki şarkılar kuyruğa eklendi!")
+            else:
+                # Tek bir şarkıyı kuyruğa ekle
                 title = info.get('title', 'Bilinmeyen Şarkı')
+                self.song_queue.append((url, title))
 
-            self.song_queue.append((url, title))
-
-            if not ctx.voice_client or not ctx.voice_client.is_playing():
-                await self.play_next(ctx)
+                if not ctx.voice_client or not ctx.voice_client.is_playing():
+                    await self.play_next(ctx)
 
     async def search_youtube(self, query):
         """YouTube'da verilen sorguyu aratır ve ilk videonun URL'sini döndürür."""
         search = VideosSearch(query, limit=1)
-        result = await asyncio.to_thread(search.next)
+        result = await asyncio.to_thread(search.result)
         if result and result['result']:
             return result['result'][0]['link']
         return None
