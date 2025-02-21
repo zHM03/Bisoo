@@ -52,7 +52,7 @@ class SteamTracker(commands.Cog):
             data = response.json()
 
             if data['total'] == 0:
-                return None, None, None  # Oyun bulunamad
+                return None, None, None  # Oyun bulunamadı
 
             # İlk sonucu alalım
             game_info = data['items'][0]
