@@ -4,6 +4,7 @@ from discord.ext import commands
 class VoiceControl(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.song_queue = []
 
     @commands.command()
     async def q(self, ctx):
