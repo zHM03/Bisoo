@@ -78,5 +78,23 @@ class Music(commands.Cog):
         if not ctx.voice_client or not ctx.voice_client.is_playing():
             await self.play_next(ctx)
 
+    @commands.command()
+    async def q(self, ctx):
+        """Mevcut şarkı kuyruğunu gösterir."""
+        await self.send_queue_embed(ctx)
+
+    async def send_queue_embed(self, ctx):
+        """Mevcut sırayı embed olarak gösterir."""
+        if not self.song_queue:
+            await ctx.send("🎵 Şu an çalma listesinde şarkı yok.")
+            return
+
+        embed = discord.Embed(title="🎶 Miyaaaav 🎶", color=discord.Color.orange())
+        for i, (url, title) in enumerate(self.song_queue, 1):
+            embed.add_field(name=f"{i}. {title}", value=url, inline=False)
+
+        await ctx.send(embed=embed)
+
+
 async def setup(bot):
     await bot.add_cog(Music(bot))
