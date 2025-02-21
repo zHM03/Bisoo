@@ -28,7 +28,6 @@ class VoiceControl(commands.Cog):
         else:
             await ctx.send("🎶 Şu an hiçbir şarkı çalmıyor.")
 
-
     @commands.command()
     async def r(self, ctx):
         voice_client = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
