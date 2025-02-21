@@ -15,18 +15,21 @@ class Music(commands.Cog):
             self.song_queue.pop(0)  # Mevcut şarkıyı kaldır
             await self.play_next(ctx)  # Sıradaki şarkıyı çal
         else:
-            await asyncio.sleep(3)  # Küçük bir gecikme ekleyelim (Discord'un işlemesi için)
+            await asyncio.sleep(3)  # Discord'un işlemesi için küçük bir gecikme
             voice_client = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
-            if voice_client and voice_client.is_connected():
+            if voice_client and not voice_client.is_playing():
                 await voice_client.disconnect()
                 print("✅ Bot kanaldan ayrıldı!")  # Log çıktısı
-            else:
-                print("❌ Bot zaten kanaldan ayrılmış.")
 
     async def play_next(self, ctx):
-        """Sıradaki şarkıyı oynatır."""
+        """Sıradaki şarkıyı oynatır. Kuyruk boşsa botu kanaldan çıkarır."""
         if not self.song_queue:
-            return  # Şarkı listesi boşsa çık
+            voice_client = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
+            if voice_client:
+                await asyncio.sleep(3)
+                await voice_client.disconnect()
+                print("✅ Kuyruk boş, bot kanaldan ayrıldı!")
+            return
 
         url, title = self.song_queue[0]  # İlk şarkıyı al
         voice_client = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
@@ -45,11 +48,14 @@ class Music(commands.Cog):
             info = ydl.extract_info(url, download=True)
             file = f"downloads/{info['id']}.webm"
 
-        # after callback'i async fonksiyon çalıştırmak için güncellendi
         def after_callback(error):
             if error:
                 print(f"Şarkı oynatma sırasında hata oluştu: {error}")
-            asyncio.run_coroutine_threadsafe(self.after_play(ctx), self.bot.loop)
+            self.bot.loop.create_task(self.after_play(ctx))
+
+            # Oynatma bittikten sonra dosyayı sil
+            if os.path.exists(file):
+                os.remove(file)
 
         voice_client.play(discord.FFmpegPCMAudio(file), after=after_callback)
 
