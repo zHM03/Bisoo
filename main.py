@@ -8,8 +8,6 @@ import sys
 directories = ['fun', 'music', 'other', 'utilis', 'discounts']
 for directory in directories:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), directory)))
-
-#deneme
 from fun import *
 from music import *
 from other import *
