@@ -20,7 +20,7 @@ class Music(commands.Cog):
         return video_urls
 
     def is_playlist(self, url):
-        # Playlist URL'inin olup olmadığını kontrol et
+        # Playlist URL'sinin olup olmadığını kontrol et
         playlist_pattern = r'list='  # Playlist URL'lerini tanımlayacak basit bir regex
         return bool(re.search(playlist_pattern, url))
 
@@ -85,8 +85,8 @@ class Music(commands.Cog):
         if self.voice_client is None or not self.voice_client.is_connected():
             self.voice_client = await ctx.author.voice.channel.connect()
 
-        # PCM ses dosyasını çal
-        audio_source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(filename), volume=0.5)
+        # Sesli kanalda çal
+        audio_source = discord.FFmpegPCMAudio(filename)
         self.voice_client.play(audio_source, after=lambda e: self.bot.loop.create_task(self.play_next(ctx)))
 
         # Embed oluştur ve gönder
