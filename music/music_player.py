@@ -63,32 +63,37 @@ class Music(commands.Cog):
         try:
             if self.queue.empty():
                 self.playing = False
-                await self.voice_client.disconnect()
+                if self.voice_client:
+                    await self.voice_client.disconnect()
                 await self.send_log_message("Kuyruk boş, sesli kanaldan çıkıldı.")
                 return
-
+    
             url = await self.queue.get()
             await self.send_log_message(f"Şarkı çalınmaya başlandı: {url}")
-
+    
             temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'temps')
             os.makedirs(temp_dir, exist_ok=True)
-
+    
             song_filename = re.sub(r'\W+', '', url)
             filename = os.path.join(temp_dir, f"{song_filename}.mp3")
-
+    
             if not os.path.exists(filename):
                 await self.download_audio(url, filename)
-
+    
+            # Eğer bağlantı kopmuşsa, tekrar bağlanılmayacak.
             if self.voice_client is None or not self.voice_client.is_connected():
-                self.voice_client = await ctx.author.voice.channel.connect()
-
+                # Bu satırı kaldırıyoruz, yani bağlantı koparsa tekrar bağlanmıyor
+                await self.send_log_message("Bağlantı kopmuş, ancak tekrar bağlanmayacak.")
+                return
+    
             audio_source = discord.FFmpegPCMAudio(filename)
             self.voice_client.play(audio_source, after=lambda e: self.bot.loop.create_task(self.play_next(ctx)))
-
+    
             await ctx.send(f"🎵 **Çalıyor:** {url}")
-
+    
         except Exception as e:
             await self.send_log_message(f"Beklenmedik bir hata oluştu (play_next): {str(e)}\n\n{traceback.format_exc()}")
+
 
     @commands.command(name="p")
     async def play(self, ctx, url):
