@@ -35,7 +35,7 @@ class Music(commands.Cog):
             await self.send_log_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
             raise
 
-    def is_playlist(self, url):
+    async def is_playlist(self, url):
         try:
             playlist_pattern = r'list='  # Playlist URL'lerini tanımlayacak basit bir regex
             is_playlist = bool(re.search(playlist_pattern, url))
