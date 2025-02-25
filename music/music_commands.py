@@ -37,11 +37,15 @@ class VoiceControl(commands.Cog):
 
     @commands.command()
     async def l(self, ctx):
+        # Sesli kanallarda bağlı olan botu al
         voice_client = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
+        
         if voice_client and voice_client.is_connected():
+            # Bağlantıyı kes
             await voice_client.disconnect()
             await ctx.message.add_reaction("✅")  # Bağlantı kesildi emojisi
         else:
+            # Eğer bot bağlı değilse
             await ctx.message.add_reaction("❌")  # Zaten bağlı değilse
 
 async def setup(bot):
