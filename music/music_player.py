@@ -137,4 +137,4 @@ class Music(commands.Cog):
             await self.play_next(ctx)
 
 async def setup(bot):
-    await bot.add_cog(Music(bot))#
+    await bot.add_cog(Music(bot))
