@@ -1,10 +1,18 @@
 import discord
-from discord.ext import commands
-import yt_dlp
+import requests
 import os
+from discord.ext import commands
+from dotenv import load_dotenv
+from datetime import datetime
+import logging
+import yt_dlp
 import asyncio
 from pytube import Playlist
 import re
+
+# Logging yapılandırması
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -32,15 +40,20 @@ class Music(commands.Cog):
             'ignoreerrors': True,              # Hatalı videoları atla
             'geo-bypass': True,
         }
-        print("İndirilmeye başlandı")
+        logger.info("İndirilmeye başlandı: %s", url)
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
+        except Exception as e:
+            logger.error("Audio download failed for %s: %s", url, e)
+            raise
 
     async def play_next(self, ctx):
         if self.queue.empty():
             self.playing = False
             await self.voice_client.disconnect()
+            logger.info("Queue is empty, disconnecting from voice channel.")
             return
 
         url = await self.queue.get()
@@ -64,16 +77,15 @@ class Music(commands.Cog):
                 info_dict = ydl.extract_info(url, download=False)
                 song_title = info_dict.get('title', 'Bilinmeyen Şarkı')
                 thumbnail_url = info_dict.get('thumbnail', '')
+                logger.info("Now playing: %s", song_title)
             except yt_dlp.utils.DownloadError as e:
-                print(f"Hata: {e}")
-
+                logger.error("Failed to extract info for %s: %s", url, e)
                 embed = discord.Embed(
                     title="❌ Hrrrrr ❌",
                     description=f"**{url}** \nBen bunu çalamam, bir sonraki şarkıya geçiyorum.",
                     color=discord.Color.red()
                 )
                 embed.set_footer(text="Error: Bisonun Keyfi")
-                
                 await ctx.send(embed=embed)
                 return await self.play_next(ctx)
 
