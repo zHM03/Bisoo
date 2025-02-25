@@ -14,17 +14,17 @@ class Music(commands.Cog):
         self.voice_client = None
 
     def get_video_urls(self, playlist_url):
-        # Playlist URL'sinden video URL'lerini al
+        """Playlist URL'sinden video URL'lerini al"""
         playlist = Playlist(playlist_url)
-        video_urls = playlist.video_urls
-        return video_urls
+        return playlist.video_urls
 
     def is_playlist(self, url):
-        # Playlist URL'sinin olup olmadığını kontrol et
+        """Playlist URL'sinin olup olmadığını kontrol et"""
         playlist_pattern = r'list='  # Playlist URL'lerini tanımlayacak basit bir regex
         return bool(re.search(playlist_pattern, url))
 
     async def download_audio(self, url, filename):
+        """Verilen URL'den ses dosyasını indir"""
         ydl_opts = {
             'format': 'bestaudio/best',        # En iyi ses formatını seç
             'outtmpl': filename,               # Çıktı dosya adı
@@ -32,12 +32,13 @@ class Music(commands.Cog):
             'ignoreerrors': True,              # Hatalı videoları atla
             'geo-bypass': True,
         }
-        print("İndirilmeye başlandı")
+        print(f"{url} - İndirilmeye başlandı")
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
     async def play_next(self, ctx):
+        """Kuyruktaki bir sonraki şarkıyı çal"""
         if self.queue.empty():
             self.playing = False
             if self.voice_client:
@@ -69,7 +70,7 @@ class Music(commands.Cog):
                 print(f"Hata: {e}")
     
                 embed = discord.Embed(
-                    title="❌ Hrrrrr ❌",
+                    title="❌ Hata ❌",
                     description=f"**{url}** \nBen bunu çalamam, bir sonraki şarkıya geçiyorum.",
                     color=discord.Color.red()
                 )
@@ -82,7 +83,7 @@ class Music(commands.Cog):
         if not os.path.exists(filename):
             await self.download_audio(url, filename)
     
-        # Sesli kanala bağlan
+        # Sesli kanala bağlan (yalnızca bağlanılmadıysa)
         if self.voice_client is None or not self.voice_client.is_connected():
             self.voice_client = await ctx.author.voice.channel.connect()
     
@@ -113,6 +114,7 @@ class Music(commands.Cog):
 
     @commands.command(name="p")
     async def play(self, ctx, playlist_url):
+        """Playlist veya video URL'si ile müzik çalmaya başla"""
         if not ctx.author.voice:
             await ctx.send("Bir ses kanalında olmalısınız!")
             return
