@@ -33,7 +33,10 @@ async def on_ready():
         await bot.load_extension('crypto') # Crypto bilgisi
         await bot.load_extension('joke')  # Şakacı 
         await bot.load_extension('gif') 
+        try:
         await bot.load_extension('music_player')    # Müzik modülü
+        except exception as e:
+            print(f"music player yüklerken hata oluştu {e}")
         await bot.load_extension('music_commands')
         await bot.load_extension('tempsdelete')
         print("Tüm extensionlar başarıyla yüklendi!")
