@@ -1,18 +1,10 @@
 import discord
-import requests
-import os
 from discord.ext import commands
-from dotenv import load_dotenv
-from datetime import datetime
-import logging
 import yt_dlp
+import os
 import asyncio
 from pytube import Playlist
 import re
-
-# Logging yapılandırması
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -20,6 +12,15 @@ class Music(commands.Cog):
         self.queue = asyncio.Queue()
         self.playing = False
         self.voice_client = None
+        self.error_channel_id = 1339957995542544435  # Hata mesajlarını göndereceğimiz kanal ID'si
+
+    async def send_error_message(self, message):
+        # Hata mesajlarını belirtilen kanala gönder
+        channel = self.bot.get_channel(self.error_channel_id)
+        if channel:
+            await channel.send(message)
+        else:
+            print(f"Hata mesajı gönderilemedi, kanal bulunamadı: {self.error_channel_id}")
 
     def get_video_urls(self, playlist_url):
         # Playlist URL'sinden video URL'lerini al
@@ -40,20 +41,19 @@ class Music(commands.Cog):
             'ignoreerrors': True,              # Hatalı videoları atla
             'geo-bypass': True,
         }
-        logger.info("İndirilmeye başlandı: %s", url)
+        print("İndirilmeye başlandı")
 
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            try:
                 ydl.download([url])
-        except Exception as e:
-            logger.error("Audio download failed for %s: %s", url, e)
-            raise
+            except Exception as e:
+                # Hata mesajını belirttiğiniz kanala gönder
+                await self.send_error_message(f"Download error for {url}: {str(e)}")
 
     async def play_next(self, ctx):
         if self.queue.empty():
             self.playing = False
             await self.voice_client.disconnect()
-            logger.info("Queue is empty, disconnecting from voice channel.")
             return
 
         url = await self.queue.get()
@@ -77,15 +77,17 @@ class Music(commands.Cog):
                 info_dict = ydl.extract_info(url, download=False)
                 song_title = info_dict.get('title', 'Bilinmeyen Şarkı')
                 thumbnail_url = info_dict.get('thumbnail', '')
-                logger.info("Now playing: %s", song_title)
             except yt_dlp.utils.DownloadError as e:
-                logger.error("Failed to extract info for %s: %s", url, e)
+                error_message = f"Error while extracting video info for {url}: {str(e)}"
+                await self.send_error_message(error_message)
+
                 embed = discord.Embed(
                     title="❌ Hrrrrr ❌",
                     description=f"**{url}** \nBen bunu çalamam, bir sonraki şarkıya geçiyorum.",
                     color=discord.Color.red()
                 )
                 embed.set_footer(text="Error: Bisonun Keyfi")
+                
                 await ctx.send(embed=embed)
                 return await self.play_next(ctx)
 
