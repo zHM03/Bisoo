@@ -110,18 +110,16 @@ class Music(commands.Cog):
             if not os.path.exists(next_filename):
                 self.bot.loop.create_task(self.download_audio(next_url, next_filename))
 
+
+
     @commands.command(name="p")
-    async def play(self, ctx, playlist_url, song_name=None):
+    async def play(self, ctx, playlist_url):
         if not ctx.author.voice:
             await ctx.send("Bir ses kanalında olmalısınız!")
             return
 
         if not self.voice_client or not self.voice_client.is_connected():
             self.voice_client = await ctx.author.voice.channel.connect()
-
-        if song_name:
-            # Şarkı ismi verildiğinde arama yap
-            await self.search_and_play(ctx, song_name)
 
         if self.is_playlist(playlist_url):
             # Playlist URL'si olduğunda pytube ile video URL'lerini al
@@ -137,8 +135,4 @@ class Music(commands.Cog):
             await self.play_next(ctx)
 
 async def setup(bot):
-    try:
-        await bot.add_cog(Music(bot))
-        print("Music cog başarıyla yüklendi.")
-    except Exception as e:
-        print(f"Cog yüklenirken hata oluştu: {e}")
+    await bot.add_cog(Music(bot))
