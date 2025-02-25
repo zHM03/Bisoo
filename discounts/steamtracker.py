@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands, tasks
 import json
 import requests
+import os  # os modülünü import ettik
 
 class SteamTracker(commands.Cog):
     def __init__(self, bot):
@@ -11,14 +12,22 @@ class SteamTracker(commands.Cog):
         self.check_for_discounts.start()
 
     def load_user_data(self):
+        # Modülün bulunduğu dizini almak
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(module_dir, 'user_games.json')  # JSON dosyasının tam yolu
+
         try:
-            with open('user_games.json', 'r') as f:
+            with open(file_path, 'r') as f:
                 self.user_games = json.load(f)
         except FileNotFoundError:
             self.user_games = {}
 
     def save_user_data(self):
-        with open('user_games.json', 'w') as f:
+        # Modülün bulunduğu dizini almak
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(module_dir, 'user_games.json')  # JSON dosyasının tam yolu
+
+        with open(file_path, 'w') as f:
             json.dump(self.user_games, f)
 
     @commands.command()
@@ -42,7 +51,18 @@ class SteamTracker(commands.Cog):
             self.save_user_data()
             await ctx.send(f"{game_name} başarıyla listeye eklendi! Fiyatı: {price} TL.")
 
-
+    @commands.command()
+    async def gamelist(self, ctx):
+        """Kullanıcının kaydettiği oyunları listeler."""
+        user_id = str(ctx.author.id)
+        
+        if user_id not in self.user_games or not self.user_games[user_id]:
+            await ctx.send("Henüz kaydedilmiş bir oyununuz yok.")
+            return
+        
+        game_list = "\n".join([f"{game['game_name'].capitalize()} - Fiyat: {game['price']} TL, İndirim: %{game['discount']}" for game in self.user_games[user_id]])
+        
+        await ctx.send(f"Kaydedilen Oyunlar:\n{game_list}")
 
     def get_steam_game_data(self, game_name):
         search_url = f'https://store.steampowered.com/api/storesearch?term={game_name}&category_ownership=1&cc=us'
@@ -99,10 +119,15 @@ class SteamTracker(commands.Cog):
             print(f"API isteği sırasında bir hata oluştu: {e}")
             return None
 
-
-
     @tasks.loop(hours=24)
     async def check_for_discounts(self):
+        discount_channel_id = 1341428278879326298  # Sabit kanal ID'si (örneğin, #indirimler kanalı)
+        discount_channel = self.bot.get_channel(discount_channel_id)  # Kanal objesini alıyoruz
+    
+        if not discount_channel:
+                print(f"Kanal {discount_channel_id} bulunamadı.")
+                return  
+    
         for user_id, games in self.user_games.items():
             for game_data in games:
                 game_name = game_data["game_name"]
