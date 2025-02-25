@@ -38,7 +38,6 @@ class Music(commands.Cog):
             ydl.download([url])
 
     async def play_next(self, ctx):
-        """Kuyruktaki bir sonraki şarkıyı çal"""
         if self.queue.empty():
             self.playing = False
             if self.voice_client:
@@ -70,7 +69,7 @@ class Music(commands.Cog):
                 print(f"Hata: {e}")
     
                 embed = discord.Embed(
-                    title="❌ Hata ❌",
+                    title="❌ Hrrrrr ❌",
                     description=f"**{url}** \nBen bunu çalamam, bir sonraki şarkıya geçiyorum.",
                     color=discord.Color.red()
                 )
@@ -83,7 +82,7 @@ class Music(commands.Cog):
         if not os.path.exists(filename):
             await self.download_audio(url, filename)
     
-        # Sesli kanala bağlan (yalnızca bağlanılmadıysa)
+        # Sesli kanala bağlan
         if self.voice_client is None or not self.voice_client.is_connected():
             self.voice_client = await ctx.author.voice.channel.connect()
     
@@ -111,6 +110,7 @@ class Music(commands.Cog):
             # Eğer şarkı yoksa indir
             if not os.path.exists(next_filename):
                 self.bot.loop.create_task(self.download_audio(next_url, next_filename))
+
 
     @commands.command(name="p")
     async def play(self, ctx, playlist_url):
