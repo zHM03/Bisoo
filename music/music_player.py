@@ -86,8 +86,9 @@ class Music(commands.Cog):
             self.voice_client = await ctx.author.voice.channel.connect()
 
         # Sesli kanalda çal
-        audio_source = discord.FFmpegPCMAudio(filename)
+        audio_source = discord.FFmpegPCMAudio(filename, executable="ffmpeg")
         self.voice_client.play(audio_source, after=lambda e: self.bot.loop.create_task(self.play_next(ctx)))
+
 
         # Embed oluştur ve gönder
         embed = discord.Embed(
