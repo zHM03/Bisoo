@@ -186,4 +186,8 @@ class Music(commands.Cog):
             raise
 
 async def setup(bot):
-    await bot.add_cog(Music(bot))
+    try:
+        await bot.add_cog(Music(bot))
+        print("Music cog başarıyla yüklendi.")
+    except Exception as e:
+        print(f"Cog yüklenirken hata oluştu: {e}")
