@@ -23,7 +23,7 @@ class Music(commands.Cog):
         else:
             print(f"Log mesajı gönderilemedi, kanal bulunamadı: {self.error_channel_id}")
 
-    def get_video_urls(self, playlist_url):
+    async def get_video_urls(self, playlist_url):
         try:
             playlist = Playlist(playlist_url)
             video_urls = playlist.video_urls
