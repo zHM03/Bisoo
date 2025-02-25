@@ -15,33 +15,36 @@ class Music(commands.Cog):
         self.voice_client = None
         self.error_channel_id = 1339957995542544435  # Hata mesajlarını göndereceğimiz kanal ID'si
 
-    async def send_error_message(self, message):
-        # Hata mesajlarını belirtilen kanala gönder
+    async def send_log_message(self, message):
+        # Log mesajlarını belirtilen kanala gönder
         channel = self.bot.get_channel(self.error_channel_id)
         if channel:
             await channel.send(message)
         else:
-            print(f"Hata mesajı gönderilemedi, kanal bulunamadı: {self.error_channel_id}")
+            print(f"Log mesajı gönderilemedi, kanal bulunamadı: {self.error_channel_id}")
 
     def get_video_urls(self, playlist_url):
         try:
             playlist = Playlist(playlist_url)
             video_urls = playlist.video_urls
+            await self.send_log_message(f"Playlist alındı: {playlist_url}")
             return video_urls
         except Exception as e:
             error_message = f"Playlist URL'si işlenirken hata oluştu: {str(e)}"
             traceback_message = traceback.format_exc()
-            await self.send_error_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
+            await self.send_log_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
             raise
 
     def is_playlist(self, url):
         try:
             playlist_pattern = r'list='  # Playlist URL'lerini tanımlayacak basit bir regex
-            return bool(re.search(playlist_pattern, url))
+            is_playlist = bool(re.search(playlist_pattern, url))
+            await self.send_log_message(f"URL kontrol edildi: {url}, Playlist: {is_playlist}")
+            return is_playlist
         except Exception as e:
             error_message = f"URL kontrolü sırasında hata oluştu: {str(e)}"
             traceback_message = traceback.format_exc()
-            await self.send_error_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
+            await self.send_log_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
             raise
 
     async def download_audio(self, url, filename):
@@ -53,21 +56,23 @@ class Music(commands.Cog):
                 'ignoreerrors': True,              # Hatalı videoları atla
                 'geo-bypass': True,
             }
-            print("İndirilmeye başlandı")
+            await self.send_log_message(f"İndirilmeye başlandı: {url}")
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
 
+            await self.send_log_message(f"İndirme tamamlandı: {url}")
+
         except yt_dlp.utils.DownloadError as e:
             error_message = f"Download error for {url}: {str(e)}"
             traceback_message = traceback.format_exc()
-            await self.send_error_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
+            await self.send_log_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
             raise
 
         except Exception as e:
             error_message = f"Beklenmedik bir hata oluştu (Download Audio): {str(e)}"
             traceback_message = traceback.format_exc()
-            await self.send_error_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
+            await self.send_log_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
             raise
 
     async def play_next(self, ctx):
@@ -75,9 +80,11 @@ class Music(commands.Cog):
             if self.queue.empty():
                 self.playing = False
                 await self.voice_client.disconnect()
+                await self.send_log_message("Kuyruk boş, sesli kanaldan çıkıldı.")
                 return
 
             url = await self.queue.get()
+            await self.send_log_message(f"Şarkı çalınmaya başlandı: {url}")
 
             # Music modülünün bulunduğu klasörü al
             current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -101,7 +108,7 @@ class Music(commands.Cog):
                 except yt_dlp.utils.DownloadError as e:
                     error_message = f"Video bilgileri çıkarılırken hata oluştu: {str(e)}"
                     traceback_message = traceback.format_exc()
-                    await self.send_error_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
+                    await self.send_log_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
 
                     embed = discord.Embed(
                         title="❌ Hrrrrr ❌",
@@ -149,7 +156,7 @@ class Music(commands.Cog):
         except Exception as e:
             error_message = f"Beklenmedik bir hata oluştu (play_next): {str(e)}"
             traceback_message = traceback.format_exc()
-            await self.send_error_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
+            await self.send_log_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
             raise
 
     @commands.command(name="p")
@@ -182,7 +189,7 @@ class Music(commands.Cog):
         except Exception as e:
             error_message = f"Beklenmedik bir hata oluştu (play komutu): {str(e)}"
             traceback_message = traceback.format_exc()
-            await self.send_error_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
+            await self.send_log_message(f"{error_message}\n\nYığın İzleme:\n{traceback_message}")
             raise
 
 async def setup(bot):
