@@ -1,8 +1,5 @@
 FROM python:3.9-slim
 
-# Gerekli sistem bağımlılıklarını yükleyelim
-RUN apt-get update && apt-get install -y ffmpeg
-
 # Çalışma dizini oluştur
 WORKDIR /app
 
