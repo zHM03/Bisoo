@@ -144,7 +144,8 @@ class Music(commands.Cog):
             self.voice_client = None
             self.playing = False
             self.queue = asyncio.Queue()  # Kuyruğu sıfırla
-            await message.add_reaction("✅")  # Tik işareti ekle
+            await ctx.message.add_reaction("😿")  # Komutu kullanan kullanıcının mesajına tepki ekle
+
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
