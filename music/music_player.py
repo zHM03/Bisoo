@@ -6,8 +6,6 @@ import asyncio
 from pytube import Playlist
 import re
 import requests
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -15,10 +13,6 @@ class Music(commands.Cog):
         self.queue = asyncio.Queue()
         self.playing = False
         self.voice_client = None
-
-        # Spotify API Authentication
-        client_credentials_manager = SpotifyClientCredentials(client_id="YOUR_SPOTIFY_CLIENT_ID", client_secret="YOUR_SPOTIFY_CLIENT_SECRET")
-        self.sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
     def get_video_urls(self, playlist_url):
         """Playlist URL'sinden video URL'lerini al"""
@@ -125,14 +119,6 @@ class Music(commands.Cog):
         video_ids = re.findall(r"watch\?v=(\S{11})", html)
         return f"https://www.youtube.com/watch?v={video_ids[0]}"
 
-    def search_spotify(self, spotify_url):
-        """Spotify linkinden şarkı bilgilerini al"""
-        track_id = spotify_url.split('/')[-1].split('?')[0]  # Track ID'yi al
-        track = self.sp.track(track_id)
-        song_title = track['name']
-        artist_name = track['artists'][0]['name']
-        return song_title, artist_name
-
     @commands.command(name="p")
     async def play(self, ctx, *args):
         """Playlist, video URL'si veya şarkı ismi ile müzik çalmaya başla"""
@@ -145,15 +131,8 @@ class Music(commands.Cog):
             self.voice_client = await ctx.author.voice.channel.connect()
 
         if args:
-            # Spotify linki kontrol et
-            if "spotify" in args[0].lower():
-                # Spotify linki varsa, şarkı adını ve sanatçıyı al
-                song_title, artist_name = self.search_spotify(args[0])
-                query = f"{song_title} {artist_name}"
-            else:
-                # Eğer şarkı ismi verilmişse, YouTube'da ara ve oynat
-                query = ' '.join(args)
-            
+            # Eğer şarkı ismi verilmişse, YouTube'da ara ve oynat
+            query = ' '.join(args)
             video_url = self.search_youtube(query)
             await self.queue.put(video_url)
         elif len(args) == 1 and self.is_playlist(args[0]):
