@@ -5,6 +5,7 @@ import os
 import asyncio
 from pytube import Playlist
 import re
+import requests
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -111,9 +112,16 @@ class Music(commands.Cog):
             if not os.path.exists(next_filename):
                 self.bot.loop.create_task(self.download_audio(next_url, next_filename))
 
+    def search_youtube(self, query):
+        """YouTube'da şarkıyı arar ve URL'yi döner"""
+        search_url = f"https://www.youtube.com/results?search_query={query}"
+        html = requests.get(search_url).text
+        video_ids = re.findall(r"watch\?v=(\S{11})", html)
+        return f"https://www.youtube.com/watch?v={video_ids[0]}"
+
     @commands.command(name="p")
-    async def play(self, ctx, playlist_url):
-        """Playlist veya video URL'si ile müzik çalmaya başla"""
+    async def play(self, ctx, *args):
+        """Playlist, video URL'si veya şarkı ismi ile müzik çalmaya başla"""
         if not ctx.author.voice:
             await ctx.send("Bir ses kanalında olmalısınız!")
             return
@@ -122,14 +130,19 @@ class Music(commands.Cog):
             # Ses kanalına bağlan
             self.voice_client = await ctx.author.voice.channel.connect()
 
-        if self.is_playlist(playlist_url):
+        if args:
+            # Eğer şarkı ismi verilmişse, YouTube'da ara ve oynat
+            query = ' '.join(args)
+            video_url = self.search_youtube(query)
+            await self.queue.put(video_url)
+        elif len(args) == 1 and self.is_playlist(args[0]):
             # Playlist URL'si olduğunda pytube ile video URL'lerini al
-            video_urls = self.get_video_urls(playlist_url)
+            video_urls = self.get_video_urls(args[0])
             for url in video_urls:
                 await self.queue.put(url)
         else:
             # Tekil video URL'si olduğunda direkt olarak URL'yi kuyruğa ekle
-            await self.queue.put(playlist_url)
+            await self.queue.put(args[0])
 
         if not self.playing:
             self.playing = True
