@@ -12,6 +12,7 @@ class Giphy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.sent_gifs = []  # Gönderilen GIF'lerin ID'lerini saklayacak liste
+        self.max_sent_gifs = 50  # Listede tutulacak maksimum GIF sayısı
 
     def get_random_gif(self, data):
         """Verilen Giphy API verisinden rastgele bir GIF seçer, daha önce gönderilmemişse seçer."""
@@ -21,6 +22,11 @@ class Giphy(commands.Cog):
             return random.choice(available_gifs)
         else:
             return random.choice(data['data'])  # Eğer tüm GIF'ler gönderildiyse, her şeyi kabul ederiz.
+
+    def clean_sent_gifs(self):
+        """Eski GIF ID'lerini temizler, listeyi belirli bir boyutta tutar."""
+        if len(self.sent_gifs) > self.max_sent_gifs:
+            self.sent_gifs = self.sent_gifs[-self.max_sent_gifs:]
 
     @commands.command(name='kedy')  # Komut adı 'gif' olarak belirledik
     async def gif(self, ctx):
@@ -42,6 +48,7 @@ class Giphy(commands.Cog):
         if response.status_code == 200:
             data = response.json()
             if data['data']:  # Eğer sonuç varsa
+                self.clean_sent_gifs()  # Eski GIF'leri temizle
                 random_gif = self.get_random_gif(data)  # Yeni bir GIF seç
                 gif_url = random_gif['url']
                 
