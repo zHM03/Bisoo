@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import requests
 
 EPIC_API_URL = "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions"
@@ -7,6 +7,8 @@ EPIC_API_URL = "https://store-site-backend-static.ak.epicgames.com/freeGamesProm
 class EpicGames(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.latest_games = set()  # Daha önce paylaşılan oyunları takip eder
+        self.check_free_games.start()  # Bot açıldığında otomatik kontrol başlar
 
     def get_free_games(self):
         """Epic Games Store'daki ücretsiz oyunları çeker"""
@@ -27,23 +29,33 @@ class EpicGames(commands.Cog):
 
         return free_games if free_games else None
 
-    @commands.command(name="freegames")
-    async def free_games(self, ctx):
-        """!freegames komutu çalıştırıldığında Epic Games oyunlarını belirtilen kanala embed olarak yollar"""
+    @tasks.loop(hours=1)  # Her saat başı kontrol eder
+    async def check_free_games(self):
+        """Epic Games ücretsiz oyunlarını belirli aralıklarla kontrol eder"""
         channel = self.bot.get_channel(1341428278879326298)
         if not channel:
-            await ctx.send("Belirtilen kanal bulunamadı.")
-            return
-        
-        games = self.get_free_games()
-        if not games:
-            await channel.send("Şu anda ücretsiz oyun yok.")
+            print("Belirtilen kanal bulunamadı.")
             return
 
+        games = self.get_free_games()
+        if not games:
+            return  # Eğer yeni oyun yoksa, bir şey gönderme
+
         for game in games:
-            embed = discord.Embed(title=game["title"], url=game["url"], color=discord.Color.blue())
+            if game["title"] in self.latest_games:
+                continue  # Eğer oyun daha önce paylaşılmışsa, tekrar paylaşma
+
+            self.latest_games.add(game["title"])  # Yeni oyunları kaydet
+
+            # Kedi temalı embed mesajı
+            embed = discord.Embed(
+                title=f"🐱Yeni Ücretsiz Oyun: {game['title']}!🐱",
+                url=game["url"],
+                description="Miyav! Yeni bir oyun bedava oldu! Hemen kap! 🐾",
+                color=discord.Color.orange()
+            )
             embed.set_image(url=game["image"]) if game["image"] else None
-            embed.set_footer(text="Epic Games Store - Ücretsiz Oyunlar")
+            embed.set_footer(text="Bisooo ile beleşçilik", icon_url="https://i.imgur.com/OJt0r5Z.png")
 
             await channel.send(embed=embed)
 
