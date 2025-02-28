@@ -14,13 +14,16 @@ class Music(commands.Cog):
         self.playing = False
         self.voice_client = None
 
+        # Belirli bir kanal ID'si (kanalınızın ID'sini burada belirleyin)
+        self.allowed_channel_id = 1276852302388400200  # Örneğin 123456789012345678
+
     def get_video_urls(self, playlist_url):
         """Playlist URL'sinden video URL'lerini al"""
         playlist = Playlist(playlist_url)
         return playlist.video_urls
 
     def is_playlist(self, url):
-        """Playlist URL'sinin olup olmadığını kontrol et"""
+        """Playlist URL'inin olup olmadığını kontrol et"""
         playlist_pattern = r'list='  # Playlist URL'lerini tanımlayacak basit bir regex
         return bool(re.search(playlist_pattern, url))
 
@@ -122,6 +125,15 @@ class Music(commands.Cog):
     @commands.command(name="p")
     async def play(self, ctx, *args):
         """Playlist, video URL'si veya şarkı ismi ile müzik çalmaya başla"""
+        if ctx.channel.id != self.allowed_channel_id:
+            embed = discord.Embed(
+                title="❌ Uyarı ❌",
+                description="Bu komut sadece belirli bir kanalda çalışabilir.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
         if not ctx.author.voice:
             await ctx.send("Bir ses kanalında olmalısınız!")
             return
@@ -152,6 +164,15 @@ class Music(commands.Cog):
     @commands.command(name="l")
     async def leave(self, ctx):
         """Bot ses kanalından ayrılır"""
+        if ctx.channel.id != self.allowed_channel_id:
+            embed = discord.Embed(
+                title="❌ Uyarı ❌",
+                description="Bu komut sadece belirli bir kanalda çalışabilir.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
         if self.voice_client:
             await self.voice_client.disconnect()
             self.voice_client = None
