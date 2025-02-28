@@ -24,8 +24,16 @@ class EpicGames(commands.Cog):
             title = game["title"]
             url = f"https://store.epicgames.com/p/{game.get('productSlug', '')}"
             image = game["keyImages"][0]["url"] if "keyImages" in game and game["keyImages"] else None
+            description = game.get("description", "Açıklama bulunamadı.")  # Açıklama varsa al
+            tags = ", ".join(tag["name"] for tag in game.get("tags", [])) if "tags" in game else "Tür bilgisi yok."
 
-            free_games.append({"title": title, "url": url, "image": image})
+            free_games.append({
+                "title": title,
+                "url": url,
+                "image": image,
+                "description": description,
+                "tags": tags
+            })
 
         return free_games if free_games else None
 
@@ -49,12 +57,14 @@ class EpicGames(commands.Cog):
 
             # Kedi temalı embed mesajı
             embed = discord.Embed(
-                title="🐱 Miyaaaav! Bakın ne buldummm! 🐱",  # Başlık artık sadece düz metin
-                description=f"**[{game['title']}]({game['url']})** Beleş mama! 😻🐾",
+                title="🐱 Yeni Ücretsiz Oyun!",
+                description=f"Miyav! **[{game['title']}]({game['url']})** bedava oldu! Hemen kap! 🐾",
                 color=discord.Color.orange()
             )
+            embed.add_field(name="🎮 Oyun Açıklaması", value=game["description"], inline=False)
+            embed.add_field(name="🏷️ Türler", value=game["tags"], inline=True)
             embed.set_image(url=game["image"]) if game["image"] else None
-            embed.set_footer(text="Bisooo ile beleşçilik", icon_url="https://i.imgur.com/OJt0r5Z.png")
+            embed.set_footer(text="Epic Games Store - Bedava Oyunlar", icon_url="https://i.imgur.com/OJt0r5Z.png")
 
             await channel.send(embed=embed)
 
