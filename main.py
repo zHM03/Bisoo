@@ -34,7 +34,7 @@ async def on_ready():
 
     extensions = [
         'commands',  # Genel komutlar
-        'steamtracker',
+        'epicgames',
         'weather',  # Hava durumu komutu
         'crypto',  # Kripto para bilgisi
         'joke',  # Şaka komutları
