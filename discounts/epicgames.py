@@ -49,13 +49,12 @@ class EpicGames(commands.Cog):
 
             # Kedi temalı embed mesajı
             embed = discord.Embed(
-                title=f"🐱Yeni Ücretsiz Oyun: {game['title']}!🐱",
-                url=game["url"],
-                description="Miyav! Yeni bir oyun bedava oldu! Hemen kap! 🐾",
+                title="🐱 Miyaaaav! Bakın kimi getirdimm!",  # Başlık artık sadece düz metin
+                description=f"**[{game['title']}]({game['url']})** bedava oldu! Hemen kap! 🐾",
                 color=discord.Color.orange()
             )
             embed.set_image(url=game["image"]) if game["image"] else None
-            embed.set_footer(text="Bisooo ile beleşçilik", icon_url="https://i.imgur.com/OJt0r5Z.png")
+            embed.set_footer(text="Epic Games Store - Bedava Oyunlar", icon_url="https://i.imgur.com/OJt0r5Z.png")
 
             await channel.send(embed=embed)
 
