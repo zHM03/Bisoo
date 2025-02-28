@@ -45,7 +45,7 @@ class EpicGames(commands.Cog):
     @tasks.loop(hours=1)  # Her saat başı kontrol eder
     async def check_free_games(self):
         """Epic Games ücretsiz oyunlarını belirli aralıklarla kontrol eder"""
-        channel = self.bot.get_channel(1337422832145141904)
+        channel = self.bot.get_channel(1341428278879326298)
         if not channel:
             print("Belirtilen kanal bulunamadı.")
             return
