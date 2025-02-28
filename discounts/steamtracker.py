@@ -55,16 +55,16 @@ class GameBot(commands.Cog):
                     try:  
                         msg = await self.bot.wait_for('message', check=check, timeout=30)  
                         selected_game = found_games[int(msg.content) - 1]  
-                        return selected_game['id']  # Seçilen oyunun ID'sini döndürüyoruz  
+                        return selected_game['id'], selected_game['name']  # Seçilen oyunun ID'sini döndürüyoruz  
                     except:  
                         if ctx:  
                             await ctx.send("Geçerli bir seçenek girilmedi, işlem iptal edildi.")  
-                        return None  
+                        return None, None  
                 elif len(found_games) == 1:  
-                    return found_games[0]['id']  # Sadece bir oyun bulunduğunda o oyunun ID'sini döndürüyoruz  
+                    return found_games[0]['id'], found_games[0]['name']  # Sadece bir oyun bulunduğunda o oyunun ID'sini döndürüyoruz  
         except requests.exceptions.RequestException as e:  
             print(f"API isteği sırasında bir hata oluştu: {e}")  
-            return None  
+            return None, None  
 
     def get_steam_game_price(self, game_id):  
         # Steam API'yi kullanarak gerçek fiyatları alıyoruz.  
@@ -93,7 +93,7 @@ class GameBot(commands.Cog):
                 await ctx.send(f"{game_name} zaten kaydedilmiş!")  
                 return  
 
-        game_id = await self.get_steam_game_id(game_name_lower, ctx)  # Asenkron fonksiyonla oyun ID'sini alıyoruz  
+        game_id, full_game_name = await self.get_steam_game_id(game_name_lower, ctx)  # Asenkron fonksiyonla oyun ID'sini alıyoruz  
 
         if not game_id:  
             await ctx.send(f"{game_name} oyunu bulunamadı veya işlem iptal edildi.")  
@@ -102,20 +102,20 @@ class GameBot(commands.Cog):
         price, discount = self.get_steam_game_price(game_id)  # Oyun fiyatını ve indirimi alıyoruz  
 
         if price is None:  
-            await ctx.send(f"{game_name} fiyat bilgisi alınamadı.")  
+            await ctx.send(f"{full_game_name} fiyat bilgisi alınamadı.")  
             return  
 
         # Eğer oyun indirime girmişse listeye eklemiyoruz  
         if discount > 0:  
-            await ctx.send(f"{game_name} şu anda indirime girdi, bu nedenle kaydedilmedi.")  
+            await ctx.send(f"{full_game_name} şu anda indirime girdi, bu nedenle kaydedilmedi.")  
         else:  
             if str(ctx.author.id) not in self.user_games:  
                 self.user_games[str(ctx.author.id)] = []  
 
             # Oyun zaten kaydedilmediyse ekleniyor  
-            self.user_games[str(ctx.author.id)].append({"game_name": game_name_lower, "price": price, "discount": discount})  
+            self.user_games[str(ctx.author.id)].append({"game_name": full_game_name, "price": price, "discount": discount})  
             self.save_user_games()  # Oyun eklendikten sonra JSON dosyasını kaydediyoruz  
-            await ctx.send(f"{game_name} başarıyla listeye eklendi! Fiyatı: ${price:.2f} USD.")  
+            await ctx.send(f"{full_game_name} başarıyla listeye eklendi! Fiyatı: ${price:.2f} USD.")  
 
     @commands.command()  
     async def listgames(self, ctx):  
@@ -148,14 +148,13 @@ class GameBot(commands.Cog):
         else:  
             await ctx.send(f"{game_name} kaydedilen oyunlar arasında bulunamadı.")  
 
-
     @tasks.loop(minutes=10)  # Her 10 dakikada bir kontrol eder  
     async def check_discounts(self):  
         channel = self.bot.get_channel(self.channel_id)  # Bildirim kanalı  
         for user_id, games in self.user_games.items():  
             for game in games:  
                 game_name = game['game_name']  
-                game_id = await self.get_steam_game_id(game_name, None)  # Asenkron fonksiyonla oyun ID'sini alıyoruz  
+                game_id, _ = await self.get_steam_game_id(game_name, None)  # Asenkron fonksiyonla oyun ID'sini alıyoruz  
 
                 if not game_id:  
                     continue  
