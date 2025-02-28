@@ -13,9 +13,19 @@ class Music(commands.Cog):
         self.queue = asyncio.Queue()
         self.playing = False
         self.voice_client = None
+        # İzin verilen tek kanal ID'si
+        self.allowed_channel_id = 1276852302388400200
 
-        # Belirli bir kanal ID'si (kanalınızın ID'sini burada belirleyin)
-        self.allowed_channel_id = 1276852302388400200  # Örneğin 123456789012345678
+    def is_allowed_channel(self, channel_id):
+        """Verilen kanal ID'sinin izin verilen kanal ile eşleşip eşleşmediğini kontrol et"""
+        return channel_id == self.allowed_channel_id
+
+    async def get_channel_mention(self, channel_id):
+        """Kanal ID'sine göre kanalın etiketini döner"""
+        channel = self.bot.get_channel(channel_id)
+        if channel:
+            return channel.mention
+        return None
 
     def get_video_urls(self, playlist_url):
         """Playlist URL'sinden video URL'lerini al"""
@@ -23,7 +33,7 @@ class Music(commands.Cog):
         return playlist.video_urls
 
     def is_playlist(self, url):
-        """Playlist URL'inin olup olmadığını kontrol et"""
+        """Playlist URL'sinin olup olmadığını kontrol et"""
         playlist_pattern = r'list='  # Playlist URL'lerini tanımlayacak basit bir regex
         return bool(re.search(playlist_pattern, url))
 
@@ -125,10 +135,11 @@ class Music(commands.Cog):
     @commands.command(name="p")
     async def play(self, ctx, *args):
         """Playlist, video URL'si veya şarkı ismi ile müzik çalmaya başla"""
-        if ctx.channel.id != self.allowed_channel_id:
+        if not self.is_allowed_channel(ctx.channel.id):
+            allowed_channel_mention = await self.get_channel_mention(self.allowed_channel_id)  # Tek kanal ID'si
             embed = discord.Embed(
-                title="❌ Uyarı ❌",
-                description="Bu komut sadece belirli bir kanalda çalışabilir.",
+                title="😾 Hrrrr 😾",
+                description=f"Sinirlendirmeyin beni buraya gelin lütfen! {allowed_channel_mention}.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
@@ -164,10 +175,11 @@ class Music(commands.Cog):
     @commands.command(name="l")
     async def leave(self, ctx):
         """Bot ses kanalından ayrılır"""
-        if ctx.channel.id != self.allowed_channel_id:
+        if not self.is_allowed_channel(ctx.channel.id):
+            allowed_channel_mention = await self.get_channel_mention(self.allowed_channel_id)  # Tek kanal ID'si
             embed = discord.Embed(
-                title="❌ Uyarı ❌",
-                description="Bu komut sadece belirli bir kanalda çalışabilir.",
+                title="😾 Hrrrr 😾",
+                description=f"Sinirlendirmeyin beni buraya gelin lütfen! {allowed_channel_mention}.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
