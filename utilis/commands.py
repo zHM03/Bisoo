@@ -14,8 +14,8 @@ class Commands(commands.Cog):
     async def help(self, ctx):
         """Yardım komutunu sağlar"""
         embed = discord.Embed(
-            title="Bisooo'nun Yetenekleri", 
-            description="Biso ile neler yapabilirsiniz:", 
+            title="Biso'nun Kedili Yetenekleri", 
+            description="Biso ile kedice neler yapabilirsiniz:", 
             color=discord.Color.orange()  # Embed için kedici bir renk
         )
     
@@ -35,16 +35,16 @@ class Commands(commands.Cog):
             "**!j:** *Komik kedili şakalar yaparım*\n"
             "**!kedy:** *Arkadaşlarımın yaramazlıklarını ifşalarım*\n"
             "**!crypto:** *<coin> coin'in fiyatını patilerimle gösteririm*\n"
-            "----------------------------------------------------\n"
-            "***Şimdilik bu kadarrr, kedice bye bye!***"
         )
         
         # Yardım mesajını embed'in içerisine ekliyoruz
         embed.add_field(name="Müzik Komutları:", value=help_message, inline=False)
+    
+        # Embed'e footer ekliyoruz
+        embed.set_footer(text="Şimdilik bu kadarrr🐱")
         
         # Yardım mesajını embed olarak gönder
         await ctx.send(embed=embed)
-
 
 async def setup(bot):
     await bot.add_cog(Commands(bot))
