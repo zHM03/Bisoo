@@ -36,6 +36,7 @@ async def on_ready():
         await bot.load_extension('music_player')    # Müzik modülü
         await bot.load_extension('music_commands')
         await bot.load_extension('tempsdelete')
+        await bot.load_extension('embedcheck')
         print("Tüm extensionlar başarıyla yüklendi!")
     except Exception as e:
         print(f"Extension yüklenirken hata oluştu: {e}")
