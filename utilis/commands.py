@@ -14,16 +14,16 @@ class Commands(commands.Cog):
     async def help(self, ctx):
         """Yardım komutunu sağlar"""
         embed = discord.Embed(
-            title="Biso'nun Kedili Yetenekleri", 
-            description="Biso ile kedice neler yapabilirsiniz:", 
+            title="Bisooo'nun Yetenekleri", 
+            description="Bisooo ile neler yapabilirsiniz:", 
             color=discord.Color.orange()  # Embed için kedici bir renk
         )
     
         help_message = (
-            "**!p:** *<Şarkı ismi, YouTube linki> Mırlayarak şarkınızı çalarım*\n"
+            "**!p:** *<Şarkı ismi veya YouTube linki> Mırlayarak şarkınızı çalarım*\n"
             "**!s:** *Mırlamayı durdururum, sessiz olurum*\n"
             "**!r:** *Mırlamaya devam ederim*\n"
-            "**!l:** *Yanınızdan ayrılırım, tüylerimle veda ederim :(*\n"
+            "**!l:** *Yanınızdan ayrılırım, patilerimle veda ederim :(*\n"
             "----------------------------------------------------\n"
             "**Oyun Takip Etme Komutları:**\n"
             "**!addgame:** *<Oyun adı veya steam linki> Listeye eklerim ve indirime girince size miyavlarım*\n"
