@@ -32,7 +32,7 @@ class Commands(commands.Cog):
             "----------------------------------------------------\n"
             "**Diğer Komutlar:**\n"
             "**!h:** *<Şehir> Merak ettiğiniz şehrin hava durumunu tüylerimle okurum*\n"
-            "**!j:** *Komik kedili şakalar yaparım*\n"
+            "**!j:** *Komik şakalar yaparım*\n"
             "**!kedy:** *Arkadaşlarımın yaramazlıklarını ifşalarım*\n"
             "**!crypto:** *<coin> coin'in fiyatını patilerimle gösteririm*\n"
         )
