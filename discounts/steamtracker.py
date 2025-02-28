@@ -31,7 +31,7 @@ class GameBot(commands.Cog):
         params = {  
             'term': game_name,  # Arama terimi  
             'category': '998',  # İndirime giren oyunlar kategorisi  
-            'cc': 'us'  # Amerikan Doları (USD) ile veri alıyoruz  
+            'cc': 'tr'  # Amerikan Doları (USD) ile veri alıyoruz  
         }  
 
         try:  
