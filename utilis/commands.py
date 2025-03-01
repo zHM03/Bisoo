@@ -40,5 +40,16 @@ class Commands(commands.Cog):
         # Yardım mesajını embed olarak gönder
         await ctx.send(embed=embed)
 
+    @commands.command(name="d")
+    @commands.has_permissions(manage_messages=True)
+    async def clear(self, ctx, amount: int):
+        """Belirtilen sayıda mesajı siler"""
+        if amount < 1:
+            await ctx.send("En az 1 mesaj silmelisin!", delete_after=5)
+            return
+
+        deleted = await ctx.channel.purge(limit=amount + 1)  # Komut mesajını da siler
+        await ctx.send(f"🧹 {len(deleted) - 1} mesaj silindi!", delete_after=5)
+
 async def setup(bot):
     await bot.add_cog(Commands(bot))
