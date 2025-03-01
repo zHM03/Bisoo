@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import aiohttp
 
-UNSPLASH_ACCESS_KEY = "YOUR_UNSPLASH_ACCESS_KEY"  # Buraya kendi API anahtarınızı ekleyin
+UNSPLASH_ACCESS_KEY = "vaA4gWCs95e1VtdcAPmRuyPqJadAvABH8yH2juWbn7k"  # Buraya kendi API anahtarınızı ekleyin
 
 class Wallpaper(commands.Cog):
     def __init__(self, bot):
