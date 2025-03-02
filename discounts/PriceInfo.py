@@ -14,7 +14,10 @@ class GameInfo(commands.Cog):
             
             # Oyunun "plain" ID'sini al
             search_response = requests.get(SEARCH_URL).json()
-            print("API Yanıtı:", search_response)  # Hata ayıklama için
+            
+            # API yanıtını hata kanalına gönder
+            debug_channel = self.bot.get_channel(1339957995542544435)
+            await debug_channel.send(f"API Yanıtı (Search): ```{search_response}```")
             
             if "data" not in search_response or not search_response["data"]:
                 await ctx.send("Hmm, bu oyun hakkında bilgi bulamadım. 🙀")
@@ -25,6 +28,8 @@ class GameInfo(commands.Cog):
             # Oyun fiyatlarını al
             PRICES_URL = f"https://api.isthereanydeal.com/v01/game/prices/?key={API_KEY}&plains={game_plain}"
             prices_response = requests.get(PRICES_URL).json()
+            
+            await debug_channel.send(f"API Yanıtı (Prices): ```{prices_response}```")
             
             if "data" not in prices_response or game_plain not in prices_response["data"]:
                 await ctx.send("Oyun fiyatı hakkında bilgi alamadım. 😾")
@@ -41,29 +46,5 @@ class GameInfo(commands.Cog):
             # Oyun resmini al
             INFO_URL = f"https://api.isthereanydeal.com/v01/game/info/?key={API_KEY}&plains={game_plain}"
             info_response = requests.get(INFO_URL).json()
-            game_image = info_response["data"].get(game_plain, {}).get("image", None)
-
-            # Embed mesajı oluştur
-            embed = discord.Embed(
-                title=f"Meow! **{game_name}** oyununu buldum! 🐾",
-                description="Hadi bakalım, işte oyunla ilgili bilgiler! 😸",
-                color=discord.Color.purple()
-            )
-
-            if game_image:
-                embed.set_image(url=game_image)
-
-            embed.add_field(name="💰 En Ucuz Fiyat", value=f"{cheapest_price} {cheapest_currency} ({cheapest_store})", inline=False)
-            embed.set_footer(text="Kedi Robot'tan sevgilerle! 😽")
-
-            await ctx.send(embed=embed)
-
-        except Exception as e:
-            channel = self.bot.get_channel(1339957995542544435)  # Hata mesajı kanalı
-            error_message = f"Hata: {str(e)}"
-            await channel.send(error_message)
-            await ctx.send("Bir şeyler ters gitti, yetkililere bildirildi. 😿")
-
-# Cog'u bot'a ekleme
-async def setup(bot):
-    await bot.add_cog(GameInfo(bot))
+            
+            await debug_channel.send(f"API Yanıtı (Info): ```{info_response}```")
