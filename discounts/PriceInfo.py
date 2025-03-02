@@ -9,11 +9,13 @@ class GameInfo(commands.Cog):
     @commands.command()
     async def gameinfo(self, ctx, *, game_name: str):
         try:
-            API_KEY = "c761a85a2ffdf26648a0f7371af6d079e0981c58"
+            API_KEY = "37d8ca093b6022f360d8e48ce69932797bc3c4e2"
             SEARCH_URL = f"https://api.isthereanydeal.com/v02/game/plain/?key={API_KEY}&title={game_name}"
             
             # Oyunun "plain" ID'sini al
             search_response = requests.get(SEARCH_URL).json()
+            print("API Yanıtı:", search_response)  # Hata ayıklama için
+            
             if "data" not in search_response or not search_response["data"]:
                 await ctx.send("Hmm, bu oyun hakkında bilgi bulamadım. 🙀")
                 return
