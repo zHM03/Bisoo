@@ -34,7 +34,7 @@ class GameInfo(commands.Cog):
             return
 
         # TL fiyatı için döviz kuru API kullanabiliriz (ExchangeRate-API)
-        exchange_response = requests.get('https://v6.exchangerate-api.com/v6/your_api_key/latest/USD')
+        exchange_response = requests.get('https://v6.exchangerate-api.com/v6/6db4ab17f8e14befe2a62b94/latest/USD')
         exchange_data = exchange_response.json()
         usd_to_try = exchange_data['conversion_rates']['TRY']
         price_try = price * usd_to_try
