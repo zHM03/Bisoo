@@ -13,6 +13,10 @@ class GameInfo(commands.Cog):
             CHEAPSHARK_API_URL = 'https://www.cheapshark.com/api/1.0'
             search_url = f"{CHEAPSHARK_API_URL}/search?title={game_name}&limit=5"
             search_response = requests.get(search_url)
+
+            # Yanıtı kontrol et
+            print(search_response.text)  # Yanıtın içeriğini görmek için ekliyoruz.
+
             search_data = search_response.json()
 
             if not search_data:
@@ -28,19 +32,15 @@ class GameInfo(commands.Cog):
             # Steam fiyatlarını almak
             steam_url = f"{CHEAPSHARK_API_URL}/discounts?steamAppID={steam_id}"
             steam_response = requests.get(steam_url)
+
+            # Yanıtı kontrol et
+            print(steam_response.text)  # Yanıtın içeriğini görmek için ekliyoruz.
+
             steam_data = steam_response.json()
 
             if not steam_data:
                 await ctx.send("Oyun fiyatı hakkında bilgi alamadım. 😾")
                 return
-
-            # TL fiyatı için döviz kuru API kullanabiliriz (ExchangeRate-API)
-            exchange_response = requests.get('https://v6.exchangerate-api.com/v6/6db4ab17f8e14befe2a62b94/latest/USD')
-            exchange_data = exchange_response.json()
-
-            # Döviz kuru verilerini alıyoruz
-            usd_to_try = exchange_data['conversion_rates']['TRY']
-            price_try = price * usd_to_try
 
             # Oyun resmi almak için Steam API'sinden kullanabiliriz
             game_image_url = f"https://cdn.akamai.steamstatic.com/steam/apps/{steam_id}/header.jpg"  # Steam oyun resmi
@@ -55,7 +55,7 @@ class GameInfo(commands.Cog):
             embed.set_footer(text="Kedi Robot'tan sevgilerle! 😽")
 
             # Fiyat bilgilerini embed'e ekle
-            embed.add_field(name="Steam Fiyatı", value=f"${price:.2f} / ₺{price_try:.2f}", inline=False)
+            embed.add_field(name="Steam Fiyatı", value=f"${price:.2f}", inline=False)
 
             # En ucuz platformu ekleyin
             cheapest_platform = steam_data[0]['storeID']
