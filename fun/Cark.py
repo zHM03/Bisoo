@@ -16,15 +16,28 @@ class Cark(commands.Cog):
             await ctx.send("⚠️ En az 2 seçenek girmelisin! Örnek: `!çark valorant lol apex`")
             return
 
-        sonuç = random.choice(seçenekler)  # Rastgele bir seçenek seç
+        sonuç = random.choice(seçenekler)  # Rastgele bir sonuç seç
         açılar = np.linspace(0, 360, 20)  # 20 karelik dönüş animasyonu
         resimler = []
         dosya_adı = "spin.gif"
 
         for açı in açılar:
-            fig, ax = plt.subplots(figsize=(5, 5))
-            wedges, texts = ax.pie([1]*len(seçenekler), labels=seçenekler, startangle=açı, colors=plt.cm.Paired.colors)
-            plt.savefig(f"frame_{int(açı)}.png")
+            fig, ax = plt.subplots(figsize=(4, 4), dpi=100)  # Daha küçük çark
+            ax.set_facecolor("none")  # Arka planı şeffaf yap
+            
+            # Çarkın kendisi
+            wedges, texts = ax.pie(
+                [1] * len(seçenekler),
+                labels=seçenekler,
+                startangle=açı,
+                colors=plt.cm.Paired.colors,
+                textprops={'fontsize': 10, 'color': "black"}  # Yazıları çarkın içine al
+            )
+
+            # Üstte sabit işaret (kazananın üstte durmasını sağlıyor)
+            ax.annotate("▼", xy=(0, 1), xycoords="axes fraction", ha="center", fontsize=20, color="red")
+
+            plt.savefig(f"frame_{int(açı)}.png", transparent=True)  # Şeffaf kaydet
             plt.close()
             resimler.append(imageio.imread(f"frame_{int(açı)}.png"))
 
