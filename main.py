@@ -45,6 +45,7 @@ async def on_ready():
         await bot.load_extension('Weather')  # Hava  durumu komutu
         await bot.load_extension('TodayinHistory')
         await bot.load_extension('Crypto') # Crypto bilgisi
+        await bot.load_extension('Poem')
         #utilis
         await bot.load_extension('commands') # yanlış komut kullanılınca ve help komutu
 
