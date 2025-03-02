@@ -16,27 +16,34 @@ class Cark(commands.Cog):
             await ctx.send("⚠️ En az 2 seçenek girmelisin! Örnek: `!çark valorant lol apex`")
             return
 
-        sonuç = random.choice(seçenekler)  # Rastgele bir sonuç seç
+        sonuç = random.choice(seçenekler)  # Rastgele bir seçenek seç
         açılar = np.linspace(0, 360, 20)  # 20 karelik dönüş animasyonu
         resimler = []
         dosya_adı = "spin.gif"
 
         for açı in açılar:
-            fig, ax = plt.subplots(figsize=(4, 4), dpi=100)  # Daha küçük çark
+            fig, ax = plt.subplots(figsize=(3, 3), dpi=100)  # Daha küçük çark
             ax.set_facecolor("none")  # Arka planı şeffaf yap
-            
-            # Çarkın kendisi
+
+            # Çarkın bölümleri
             wedges, texts = ax.pie(
                 [1] * len(seçenekler),
-                labels=seçenekler,
                 startangle=açı,
-                colors=plt.cm.Paired.colors,
-                textprops={'fontsize': 10, 'color': "black"}  # Yazıları çarkın içine al
+                colors=plt.cm.Paired.colors
             )
 
-            # Üstte sabit işaret (kazananın üstte durmasını sağlıyor)
-            ax.annotate("▼", xy=(0, 1), xycoords="axes fraction", ha="center", fontsize=20, color="red")
+            # Yazıları çarkın içine ekleyelim
+            for i, text in enumerate(texts):
+                text.set_text("")  # Varsayılan etiketleri sil
+                açı_değeri = (360 / len(seçenekler)) * i + açı  # Her bölüme açısını ver
+                x = 0.6 * np.cos(np.radians(açı_değeri))  # X koordinatı
+                y = 0.6 * np.sin(np.radians(açı_değeri))  # Y koordinatı
+                ax.text(x, y, seçenekler[i], ha="center", va="center", fontsize=10, color="black", fontweight="bold")
 
+            # Üstte sabit işaret (kazananın üstte durmasını sağlıyor)
+            ax.text(0, 1.2, "▼", ha="center", va="center", fontsize=20, color="red", fontweight="bold")
+
+            plt.axis("off")  # Kenar çizgilerini kaldır
             plt.savefig(f"frame_{int(açı)}.png", transparent=True)  # Şeffaf kaydet
             plt.close()
             resimler.append(imageio.imread(f"frame_{int(açı)}.png"))
