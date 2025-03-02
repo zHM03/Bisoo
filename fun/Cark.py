@@ -16,20 +16,16 @@ class Cark(commands.Cog):
             await ctx.send("⚠️ En az 2 seçenek girmelisin! Örnek: `!çark a b c d`")
             return
 
-        açılar = np.linspace(0, 360 * 3, 20)  # 3 tur dönüp duracak
+        açılar = np.linspace(0, 360 * 3, 20)  # 3 tur dönecek
         resimler = []
         dosya_adı = "spin.gif"
 
-        final_açı = random.uniform(0, 360)  # Rastgele bir açıda duracak
+        final_açı = random.uniform(0, 360)  # Rastgele açıda duracak
         bölüm_sayısı = len(seçenekler)
         bölüm_açısı = 360 / bölüm_sayısı  # Her bölümün açısı
 
-        # Kazananı hesapla (Çarkın üst kısmında olan bölüm)
-        kazanan_index = int((360 - final_açı) // bölüm_açısı) % bölüm_sayısı
-        kazanan = seçenekler[kazanan_index]
-
         for açı in açılar:
-            döndürme_açısı = açı + final_açı  # Çarkın son açısına göre döndür
+            döndürme_açısı = açı + final_açı  # Çarkın son açısını hesapla
             fig, ax = plt.subplots(figsize=(3, 3), dpi=100)
             ax.set_facecolor("none")  
 
@@ -60,7 +56,7 @@ class Cark(commands.Cog):
         for açı in açılar:
             os.remove(f"frame_{int(açı)}.png")
 
-        await ctx.send(f"🎡 Çark dönüyor... Sonuç: **{kazanan}**", file=discord.File(dosya_adı))
+        await ctx.send("🎡 Bakalım kim mama ısmarlıyor...", file=discord.File(dosya_adı))
 
         os.remove(dosya_adı)
 
