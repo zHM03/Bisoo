@@ -10,13 +10,19 @@ class TodayInHistory(commands.Cog):
     @commands.command(name="today")
     async def today_in_history(self, ctx):
         # Bugünün tarihi
-        today = datetime.datetime.now().strftime('%m-%d')
+        today = datetime.datetime.now().strftime('%m/%d')  # mm/dd formatında
+        month, day = today.split('/')
 
-        # Tarihteki olayları çekmek için API URL'si
-        url = f"https://en.wikipedia.org/api/rest_v1/feed/onthisday/events/{today}"
-        response = requests.get(url)
+        # API URL'si - Doğru endpoint
+        url = f"https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/all/{month}/{day}"
 
-        # API yanıtını kontrol etmek için
+        # API çağrısını yapalım
+        response = requests.get(
+            url, 
+            headers={"User-Agent": "bisooo/1.0 (h2kh03@gmail.com)"}
+        )
+
+        # API yanıtını log kanalına yazalım
         log_channel_id = 1339957995542544435  # Hedef kanal ID'si
         log_channel = self.bot.get_channel(log_channel_id)
 
@@ -28,7 +34,7 @@ class TodayInHistory(commands.Cog):
         if response.status_code != 200:
             await ctx.send(f"API ile iletişim kurulamıyor. Hata kodu: {response.status_code}")
             return
-        
+
         # Yanıtı JSON formatında alalım
         try:
             data = response.json()
