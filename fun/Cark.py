@@ -16,8 +16,8 @@ class Cark(commands.Cog):
             await ctx.send("⚠️ En az 2 seçenek girmelisin! Örnek: `!çark a b c d e`")
             return
 
-        tur_sayısı = 3  # Kaç tam tur dönecek
-        kare_sayısı = 20  # Animasyon için kaç kare oluşturulacak
+        tur_sayısı = 2  # Kaç tam tur dönecek (Azaltıldı)
+        kare_sayısı = 15  # Animasyon için kare sayısı (Azaltıldı)
         açılar = np.linspace(0, 360 * tur_sayısı, kare_sayısı)  # Döndürme açıları
         son_açı = random.uniform(0, 360)  # Rastgele son durma açısı
         çark_açısı = açılar + son_açı
@@ -28,12 +28,13 @@ class Cark(commands.Cog):
         bölüm_açısı = 360 / bölüm_sayısı  # Her seçeneğin açısı
         geçici_dosyalar = []  # Geçici dosyaları takip etmek için liste
 
-        # Özel renk dizisi (sırasıyla tekrar eder)
-        renkler = ["#ff4545", "#00ff99", "#006aff", "#ff4545"]
-        renkler = [renkler[i % len(renkler)] for i in range(bölüm_sayısı)]  # Döngüyle renkleri eşleştir
+        # **Daha Canlı ve Rastgele Renkler**
+        canlı_renkler = ["#ff0000", "#ff7300", "#ffeb00", "#47ff00", "#00ff9d", 
+                         "#007bff", "#5a00ff", "#d000ff", "#ff009d", "#ff0047"]
+        renkler = random.sample(canlı_renkler, bölüm_sayısı)  # Her çarkta rastgele renkler olacak
 
         for açı in çark_açısı:
-            fig, ax = plt.subplots(figsize=(4, 4), dpi=300)
+            fig, ax = plt.subplots(figsize=(4, 4), dpi=150)  # DPI düşürüldü (Hız arttı)
             ax.set_facecolor("none")  # Arka plan şeffaf
 
             # Çarkı çiz
@@ -56,13 +57,13 @@ class Cark(commands.Cog):
 
             plt.axis("off")
             resim_adı = f"frame_{int(açı)}.png"
-            plt.savefig(resim_adı, transparent=True, bbox_inches='tight', pad_inches=0.1)
+            plt.savefig(resim_adı, transparent=True, bbox_inches='tight', pad_inches=0.05)
             plt.close()
             geçici_dosyalar.append(resim_adı)  # Dosya adını listeye ekle
             resimler.append(imageio.imread(resim_adı))
 
         # Animasyonu oluştur
-        imageio.mimsave(dosya_adı, resimler, duration=0.05)
+        imageio.mimsave(dosya_adı, resimler, duration=0.04)  # Daha akıcı animasyon
 
         # Geçici dosyaları temizle
         for dosya in geçici_dosyalar:
