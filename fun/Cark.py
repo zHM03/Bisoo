@@ -26,6 +26,7 @@ class Cark(commands.Cog):
         resimler = []
         bölüm_sayısı = len(seçenekler)
         bölüm_açısı = 360 / bölüm_sayısı  # Her seçeneğin açısı
+        geçici_dosyalar = []  # Geçici dosyaları takip etmek için liste
 
         for açı in çark_açısı:
             fig, ax = plt.subplots(figsize=(4, 4), dpi=300)
@@ -53,18 +54,22 @@ class Cark(commands.Cog):
             resim_adı = f"frame_{int(açı)}.png"
             plt.savefig(resim_adı, transparent=True, bbox_inches='tight', pad_inches=0.1)
             plt.close()
+            geçici_dosyalar.append(resim_adı)  # Dosya adını listeye ekle
             resimler.append(imageio.imread(resim_adı))
 
         # Animasyonu oluştur
         imageio.mimsave(dosya_adı, resimler, duration=0.05)
 
         # Geçici dosyaları temizle
-        for resim in resimler:
-            os.remove(resim_adı)
+        for dosya in geçici_dosyalar:
+            if os.path.exists(dosya):
+                os.remove(dosya)
 
         await ctx.send("🎡 Çark dönüyor...", file=discord.File(dosya_adı))
 
-        os.remove(dosya_adı)
+        # Çark animasyonunu da temizle
+        if os.path.exists(dosya_adı):
+            os.remove(dosya_adı)
 
 async def setup(bot):
     await bot.add_cog(Cark(bot))
