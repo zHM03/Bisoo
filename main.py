@@ -42,7 +42,8 @@ async def on_ready():
         await bot.load_extension('MusicUtils')      #kanaldaki mesajları siler
         await bot.load_extension('TempsDelete')     #bot kanalda olmayınca eski şarkıları siler
         #other
-        await bot.load_extension('Weather')  # Hava durumu komutu
+        await bot.load_extension('Weather')  # Hava  durumu komutu
+        await bot.load_extension('TodayinHistory')
         await bot.load_extension('Crypto') # Crypto bilgisi
         #utilis
         await bot.load_extension('commands') # yanlış komut kullanılınca ve help komutu
