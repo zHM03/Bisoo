@@ -28,6 +28,10 @@ class Cark(commands.Cog):
         bölüm_açısı = 360 / bölüm_sayısı  # Her seçeneğin açısı
         geçici_dosyalar = []  # Geçici dosyaları takip etmek için liste
 
+        # Özel renk dizisi (sırasıyla tekrar eder)
+        renkler = ["#ff4545", "#00ff99", "#006aff", "#ff4545"]
+        renkler = [renkler[i % len(renkler)] for i in range(bölüm_sayısı)]  # Döngüyle renkleri eşleştir
+
         for açı in çark_açısı:
             fig, ax = plt.subplots(figsize=(4, 4), dpi=300)
             ax.set_facecolor("none")  # Arka plan şeffaf
@@ -36,7 +40,7 @@ class Cark(commands.Cog):
             wedges, _ = ax.pie(
                 [1] * bölüm_sayısı,
                 startangle=açı,
-                colors=plt.cm.Paired.colors,
+                colors=renkler,
                 wedgeprops={"edgecolor": "black", "linewidth": 2}  # Kenar çizgileri eklendi
             )
 
