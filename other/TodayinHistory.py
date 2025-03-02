@@ -15,36 +15,42 @@ class TodayInHistory(commands.Cog):
         # Tarihteki olayları çekmek için API URL'si
         url = f"https://en.wikipedia.org/api/rest_v1/feed/onthisday/events/{today}"
         response = requests.get(url)
-        
-        # API yanıtını yazdırarak hata kaydını kontrol edelim
-        print(f"API Yanıtı: {response.status_code}")
-        print(f"API Yanıtı İçeriği: {response.text}")
 
+        # API yanıtını kontrol etmek için
+        log_channel_id = 1339957995542544435  # Hedef kanal ID'si
+        log_channel = self.bot.get_channel(log_channel_id)
+
+        # API yanıtını log kanalına yazalım
+        if log_channel:
+            await log_channel.send(f"API Yanıtı: {response.status_code}")
+            await log_channel.send(f"API Yanıtı İçeriği: {response.text}")
+
+        if response.status_code != 200:
+            await ctx.send(f"API ile iletişim kurulamıyor. Hata kodu: {response.status_code}")
+            return
+        
         # Yanıtı JSON formatında alalım
         try:
             data = response.json()
 
             # Eğer veri bulunmuşsa
-            if 'events' in data:
+            if 'events' in data and data['events']:
                 events = data['events']
-                if events:
-                    event_titles = [event['text'] for event in events[:5]]  # İlk 5 olayı al
+                event_titles = [event['text'] for event in events[:5]]  # İlk 5 olayı al
 
-                    # Kedi temalı başlıklar ve içeriklerle embed mesajı
-                    embed = discord.Embed(
-                        title="Miyav! Bugün Tarihte Ne Oldu?",
-                        description="İşte bugün tarihte gerçekleşen bazı olaylar!",
-                        color=discord.Color.purple()
-                    )
+                # Kedi temalı başlıklar ve içeriklerle embed mesajı
+                embed = discord.Embed(
+                    title="Miyav! Bugün Tarihte Ne Oldu?",
+                    description="İşte bugün tarihte gerçekleşen bazı olaylar!",
+                    color=discord.Color.purple()
+                )
 
-                    for i, title in enumerate(event_titles, 1):
-                        embed.add_field(name=f'🐾 Olay {i}:', value=title, inline=False)
+                for i, title in enumerate(event_titles, 1):
+                    embed.add_field(name=f'🐾 Olay {i}:', value=title, inline=False)
 
-                    await ctx.send(embed=embed)
-                else:
-                    await ctx.send("Bugün tarihteki olaylar bulunamadı.")
+                await ctx.send(embed=embed)
             else:
-                await ctx.send("Veri çekilemedi, lütfen tekrar deneyin.")
+                await ctx.send("Bugün tarihteki olaylar bulunamadı.")
         except Exception as e:
             print(f"Hata: {e}")
             await ctx.send("API yanıtı işlenemedi, lütfen tekrar deneyin.")
