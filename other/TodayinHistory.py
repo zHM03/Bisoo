@@ -2,10 +2,12 @@ import discord
 from discord.ext import commands
 import requests
 import datetime
+from googletrans import Translator
 
 class TodayHistory(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.translator = Translator()  # Çevirici nesnesi
 
     @commands.command(name="today")
     async def today_in_history(self, ctx):
@@ -25,12 +27,16 @@ class TodayHistory(commands.Cog):
                 if 'events' in data and data['events']:
                     events = data['events']
                     event_titles = [event['text'] for event in events[:5]]  # İlk 5 olay
+                    
+                    # Verileri Türkçe'ye çevir
+                    event_titles_translated = [self.translator.translate(title, src='en', dest='tr').text for title in event_titles]
+
                     embed = discord.Embed(
                         title="Miyav! Bugün Tarihte Ne Oldu?",
                         description="İşte bugün tarihte gerçekleşen bazı olaylar!",
                         color=discord.Color.purple()
                     )
-                    for i, title in enumerate(event_titles, 1):
+                    for i, title in enumerate(event_titles_translated, 1):
                         embed.add_field(name=f'🐾 Olay {i}:', value=title, inline=False)
 
                     await ctx.send(embed=embed)  # Embed ile mesajı gönder
