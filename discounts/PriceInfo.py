@@ -8,56 +8,69 @@ class GameInfo(commands.Cog):
 
     @commands.command()
     async def gameinfo(self, ctx, *, game_name: str):
-        # CheapShark API üzerinden oyun araması
-        CHEAPSHARK_API_URL = 'https://www.cheapshark.com/api/1.0'
-        search_url = f"{CHEAPSHARK_API_URL}/search?title={game_name}&limit=5"
-        search_response = requests.get(search_url)
-        search_data = search_response.json()
+        try:
+            # CheapShark API üzerinden oyun araması
+            CHEAPSHARK_API_URL = 'https://www.cheapshark.com/api/1.0'
+            search_url = f"{CHEAPSHARK_API_URL}/search?title={game_name}&limit=5"
+            search_response = requests.get(search_url)
+            search_data = search_response.json()
 
-        if not search_data:
-            await ctx.send("Oyun bulunamadı.")
-            return
+            if not search_data:
+                await ctx.send("Hmm, bu oyun hakkında bilgi bulamadım. 🙀")
+                return
 
-        # Oyun bilgilerini ve fiyatları almak
-        game_info = search_data[0]
-        game_title = game_info['title']
-        steam_id = game_info['steamAppID']
-        price = float(game_info['price'])
+            # Oyun bilgilerini ve fiyatları almak
+            game_info = search_data[0]
+            game_title = game_info['title']
+            steam_id = game_info['steamAppID']
+            price = float(game_info['price'])
 
-        # Steam fiyatlarını almak
-        steam_url = f"{CHEAPSHARK_API_URL}/discounts?steamAppID={steam_id}"
-        steam_response = requests.get(steam_url)
-        steam_data = steam_response.json()
+            # Steam fiyatlarını almak
+            steam_url = f"{CHEAPSHARK_API_URL}/discounts?steamAppID={steam_id}"
+            steam_response = requests.get(steam_url)
+            steam_data = steam_response.json()
 
-        if not steam_data:
-            await ctx.send("Fiyat bilgisi alınamadı.")
-            return
+            if not steam_data:
+                await ctx.send("Oyun fiyatı hakkında bilgi alamadım. 😾")
+                return
 
-        # TL fiyatı için döviz kuru API kullanabiliriz (ExchangeRate-API)
-        exchange_response = requests.get('https://v6.exchangerate-api.com/v6/6db4ab17f8e14befe2a62b94/latest/USD')
-        exchange_data = exchange_response.json()
-        usd_to_try = exchange_data['conversion_rates']['TRY']
-        price_try = price * usd_to_try
+            # TL fiyatı için döviz kuru API kullanabiliriz (ExchangeRate-API)
+            exchange_response = requests.get('https://v6.exchangerate-api.com/v6/6db4ab17f8e14befe2a62b94/latest/USD')
+            exchange_data = exchange_response.json()
 
-        # Embed mesajı oluşturma
-        embed = discord.Embed(
-            title=f"**{game_title}** Oyun Fiyat Bilgileri",
-            description="Fiyatlar ve platformlar:",
-            color=discord.Color.purple()
-        )
-        embed.set_thumbnail(url="https://example.com/cat_image.png")  # Kedi temalı görsel
-        embed.set_footer(text="Bilgiler CheapShark API kullanılarak sağlanmıştır.")
+            # Döviz kuru verilerini alıyoruz
+            usd_to_try = exchange_data['conversion_rates']['TRY']
+            price_try = price * usd_to_try
 
-        # Fiyat bilgilerini embed'e ekle
-        embed.add_field(name="Steam Fiyatı", value=f"${price:.2f} / ₺{price_try:.2f}", inline=False)
+            # Oyun resmi almak için Steam API'sinden kullanabiliriz
+            game_image_url = f"https://cdn.akamai.steamstatic.com/steam/apps/{steam_id}/header.jpg"  # Steam oyun resmi
 
-        # En ucuz platformu ekleyin
-        cheapest_platform = steam_data[0]['storeID']
-        embed.add_field(name="En Ucuz Platform", value=cheapest_platform, inline=False)
+            # Embed mesajı oluşturma
+            embed = discord.Embed(
+                title=f"Meow! **{game_title}** oyununu buldum! 🐾",
+                description="Hadi bakalım, işte oyunla ilgili bilgiler! 😸",
+                color=discord.Color.purple()
+            )
+            embed.set_image(url=game_image_url)  # Oyun resmini ekliyoruz
+            embed.set_footer(text="Kedi Robot'tan sevgilerle! 😽")
 
-        # Embed mesajını gönder
-        await ctx.send(embed=embed)
+            # Fiyat bilgilerini embed'e ekle
+            embed.add_field(name="Steam Fiyatı", value=f"${price:.2f} / ₺{price_try:.2f}", inline=False)
 
-# Cog'u bot'a ekleme
+            # En ucuz platformu ekleyin
+            cheapest_platform = steam_data[0]['storeID']
+            embed.add_field(name="En Ucuz Platform", value=f"{cheapest_platform} purrfect!", inline=False)
+
+            # Embed mesajını gönder
+            await ctx.send(embed=embed)
+
+        except Exception as e:
+            # Hata mesajını belirli bir kanala gönder
+            channel = self.bot.get_channel(1339957995542544435)  # Hata mesajlarını göndereceğiniz kanal ID'si
+            error_message = f"Hata: {str(e)}"
+            await channel.send(error_message)
+            await ctx.send("Bir şeyler ters gitti, yetkililere bildirildi. 😿")
+
+# Cog'u bot'a async olarak eklemek
 async def setup(bot):
     await bot.add_cog(GameInfo(bot))
