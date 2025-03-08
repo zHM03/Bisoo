@@ -24,16 +24,22 @@ class Music(commands.Cog):
         playlist_pattern = r'list='  # Playlist URL'lerini tanımlayacak basit bir regex
         return bool(re.search(playlist_pattern, url))
 
+    import os
+    
     async def download_audio(self, url, filename):
+        current_directory = os.getcwd()  # Çalıştırılan dosyanın bulunduğu dizin
+        cookies_path = os.path.join(current_directory, "cookies.txt")  # cookies.txt dosyasının tam yolu
+    
         ydl_opts = {
-            'format': 'bestaudio/best',        # En iyi ses formatını seç
-            'outtmpl': filename,               # Çıktı dosya adı
-            'quiet': False,                     # Sadece hataları göster
-            'ignoreerrors': True,              # Hatalı videoları atla
+            'format': 'bestaudio/best',        
+            'outtmpl': filename,               
+            'quiet': False,                     
+            'ignoreerrors': True,              
             'geo-bypass': True,
+            'cookiefile': cookies_path  # Cookies dosyasını kullan
         }
-        print("İndirilmeye başlandı")
-
+        print(f"İndirilmeye başlandı. Cookies dosyası: {cookies_path}")
+    
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
