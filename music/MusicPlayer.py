@@ -26,9 +26,7 @@ class Music(commands.Cog):
     async def check_cookies_file(self):
         """cookies.txt dosyasının olup olmadığını kontrol et"""
         if not os.path.exists("cookies.txt"):
-            channel = self.bot.get_channel(self.channel_id)
-            if channel:
-                await channel.send("⚠️ **Hata:** `cookies.txt` dosyası bulunamadı! Lütfen ilgili dosyayı ekleyin.")
+            return
 
     async def download_audio(self, url, filename):
         """Verilen URL'den ses dosyasını indir"""
