@@ -12,22 +12,7 @@ class Music(commands.Cog):
         self.queue = asyncio.Queue()
         self.playing = False
         self.voice_client = None
-
-    async def check_cookies_file(self, ctx):
-        """cookies.txt dosyasının varlığını kontrol eder"""
-        if not os.path.exists("cookies.txt"):
-            embed = discord.Embed(
-                title="⚠️ Uyarı ⚠️",
-                description="cookies.txt dosyası bulunamadı! Lütfen dosyanın mevcut olduğundan emin olun.",
-                color=discord.Color.red()
-            )
-            channel = self.bot.get_channel(123456789012345678)  # Buraya ilgili kanalın ID'sini koy
-            if channel:
-                await channel.send(embed=embed)
-
-    async def cog_load(self):
-        """Bot başlatıldığında cookies.txt dosyasını kontrol eder"""
-        await self.check_cookies_file()
+        self.channel_id = 1339957995542544435  # Hata mesajlarının gönderileceği kanal
 
     def get_video_urls(self, playlist_url):
         """Playlist URL'sinden video URL'lerini al"""
@@ -35,22 +20,30 @@ class Music(commands.Cog):
         return playlist.video_urls
 
     def is_playlist(self, url):
-        """Playlist URL'sinin olup olmadığını kontrol et"""
-        playlist_pattern = r'list='
-        return bool(re.search(playlist_pattern, url))
+        """Playlist URL'si olup olmadığını kontrol et"""
+        return 'list=' in url
+
+    async def check_cookies_file(self):
+        """cookies.txt dosyasının olup olmadığını kontrol et"""
+        if not os.path.exists("cookies.txt"):
+            channel = self.bot.get_channel(self.channel_id)
+            if channel:
+                await channel.send("⚠️ **Hata:** `cookies.txt` dosyası bulunamadı! Lütfen ilgili dosyayı ekleyin.")
 
     async def download_audio(self, url, filename):
         """Verilen URL'den ses dosyasını indir"""
+        await self.check_cookies_file()
+        
         ydl_opts = {
             'format': 'bestaudio/best',
             'outtmpl': filename,
             'quiet': False,
             'ignoreerrors': True,
             'geo-bypass': True,
-            'cookiefile': "cookies.txt"  # Cookies dosyasını kullan
         }
+        
         print(f"{url} - İndirilmeye başlandı")
-
+        
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
@@ -68,8 +61,7 @@ class Music(commands.Cog):
 
         current_directory = os.path.dirname(os.path.abspath(__file__))
         temp_dir = os.path.join(current_directory, 'temps')
-        if not os.path.exists(temp_dir):
-            os.makedirs(temp_dir)
+        os.makedirs(temp_dir, exist_ok=True)
 
         song_filename = re.sub(r'\W+', '', url)
         filename = os.path.join(temp_dir, f"{song_filename}.mp3")
@@ -80,15 +72,8 @@ class Music(commands.Cog):
                 info_dict = ydl.extract_info(url, download=False)
                 song_title = info_dict.get('title', 'Bilinmeyen Şarkı')
                 thumbnail_url = info_dict.get('thumbnail', '')
-            except yt_dlp.utils.DownloadError as e:
-                print(f"Hata: {e}")
-
-                embed = discord.Embed(
-                    title="❌ Hata ❌",
-                    description=f"**{url}** \nBu şarkıyı çalamıyorum, bir sonrakine geçiyorum.",
-                    color=discord.Color.red()
-                )
-                await ctx.send(embed=embed)
+            except yt_dlp.utils.DownloadError:
+                await ctx.send("Bu şarkıyı çalamıyorum, bir sonraki şarkıya geçiyorum.")
                 return await self.play_next(ctx)
 
         if not os.path.exists(filename):
@@ -97,23 +82,9 @@ class Music(commands.Cog):
         audio_source = discord.FFmpegPCMAudio(filename)
         self.voice_client.play(audio_source, after=lambda e: self.bot.loop.create_task(self.play_next(ctx)))
 
-        embed = discord.Embed(
-            title="🎶 Şu an çalıyor 🎶",
-            description=f"**{song_title}**",
-            color=discord.Color.blue()
-        )
-        embed.set_footer(text="Şarkıcı: BISOOO🐱")
+        embed = discord.Embed(title="🎶 Oynatılıyor", description=f"**{song_title}**", color=discord.Color.blue())
         embed.set_image(url=thumbnail_url)
-
         await ctx.send(embed=embed)
-
-        if not self.queue.empty():
-            next_url = self.queue._queue[0]  
-            next_song_filename = re.sub(r'\W+', '', next_url)  
-            next_filename = os.path.join(temp_dir, f"{next_song_filename}.mp3")
-
-            if not os.path.exists(next_filename):
-                self.bot.loop.create_task(self.download_audio(next_url, next_filename))
 
     @commands.command(name="p")
     async def play(self, ctx, playlist_url):
@@ -144,7 +115,7 @@ class Music(commands.Cog):
             self.voice_client = None
             self.playing = False
             self.queue = asyncio.Queue()
-            await ctx.send("Bot ses kanalından ayrıldı ve işlem sıfırlandı.")
+            await ctx.send("Bot ses kanalından ayrıldı.")
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
