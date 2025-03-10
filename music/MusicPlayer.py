@@ -5,6 +5,7 @@ import os
 import asyncio
 from pytube import Playlist
 import re
+import aiohttp
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -13,6 +14,15 @@ class Music(commands.Cog):
         self.playing = False
         self.voice_client = None
         self.channel_id = 1339957995542544435  # Hata mesajlarının gönderileceği kanal
+
+    async def search_youtube(self, query):
+        """YouTube'da arama yapıp ilk sonucu döndür."""
+        search_url = f"https://www.youtube.com/results?search_query={query.replace(' ', '+')}"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(search_url) as response:
+                html = await response.text()
+                video_ids = re.findall(r'"videoId":"(\w{11})"', html)
+                return f"https://www.youtube.com/watch?v={video_ids[0]}" if video_ids else None
 
     def get_video_urls(self, playlist_url):
         """Playlist URL'sinden video URL'lerini al"""
@@ -87,8 +97,8 @@ class Music(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name="p")
-    async def play(self, ctx, playlist_url):
-        """Playlist veya video URL'si ile müzik çalmaya başla"""
+    async def play(self, ctx, *, query):
+        """Playlist, video URL'si veya şarkı ismi ile müzik çalmaya başla"""
         if not ctx.author.voice:
             await ctx.send("Bir ses kanalında olmalısınız!")
             return
@@ -96,12 +106,19 @@ class Music(commands.Cog):
         if self.voice_client is None or not self.voice_client.is_connected():
             self.voice_client = await ctx.author.voice.channel.connect()
 
-        if self.is_playlist(playlist_url):
-            video_urls = self.get_video_urls(playlist_url)
+        if self.is_playlist(query):
+            video_urls = self.get_video_urls(query)
             for url in video_urls:
                 await self.queue.put(url)
+        elif "youtube.com" in query or "youtu.be" in query:
+            await self.queue.put(query)
         else:
-            await self.queue.put(playlist_url)
+            url = await self.search_youtube(query)
+            if url:
+                await self.queue.put(url)
+            else:
+                await ctx.send("Şarkı bulunamadı.")
+                return
 
         if not self.playing:
             self.playing = True
