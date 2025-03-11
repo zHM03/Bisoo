@@ -41,9 +41,9 @@ class Commands(commands.Cog):
         # Kedi temalı küçük bir resim ekleyelim
         embed.set_thumbnail(url="https://imgur.com/a/FsG1xAJ")  # Kedi görseli
         embed.set_footer(text="Biso her zaman burada! 😺")
-
+        
     # Yardım mesajını embed olarak gönder
-    await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
 
 
     @commands.command(name="d")
