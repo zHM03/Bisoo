@@ -38,7 +38,7 @@ class Commands(commands.Cog):
         embed.description = help_message
         
         # Kedi temalı küçük bir resim ekleyelim
-        embed.set_thumbnail(url="https://i.imgur.com/WkuUILN.jpeg")  # Doğru kedi görseli linki
+        embed.set_thumbnail(url="https://i.imgur.com/90rVRLz.jpeg")  # Doğru kedi görseli linki
         embed.set_footer(text="Biso her zaman burada! 😺")
     
         # **Burada eksik olan satır!**
