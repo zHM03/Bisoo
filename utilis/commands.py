@@ -16,7 +16,7 @@ class Commands(commands.Cog):
         embed = discord.Embed(
             title="🐱 Bisooo'nun Yetenekleri! 🐾", 
             description="Biso ile neler yapabilirsiniz?", 
-            color=discord.Color.orange()  # Turuncu renk kedi temasına uygun
+            color=discord.Color.orange()
         )
     
         help_message = (
@@ -34,14 +34,16 @@ class Commands(commands.Cog):
             "----------------------------------------------------\n"
             "🐾 ***Miyav! Şimdilik bu kadarrr...***"
         )
-
-    
-        # Kedi temalı küçük bir resim ekleyelim
-        embed.set_thumbnail(url="https://imgur.com/a/FsG1xAJ")  # Kedi görseli
-        embed.set_footer(text="Biso her zaman burada! 😺")
         
-    # Yardım mesajını embed olarak gönder
-        await ctx.send(embed=embed)
+        embed.add_field(name="🐾 Miyav Komutlar:", value=help_message, inline=False)
+        
+        # Kedi temalı küçük bir resim ekleyelim
+        embed.set_thumbnail(url="https://i.imgur.com/VwPFi8P.png")  # Doğru kedi görseli linki
+        embed.set_footer(text="Biso her zaman burada! 😺")
+    
+        # **Burada eksik olan satır!**
+        await ctx.send(embed=embed)  # Bu satır fonksiyonun dışına çıkmıştı, içine aldım.
+
 
 
     @commands.command(name="d")
