@@ -34,9 +34,7 @@ class Commands(commands.Cog):
             "----------------------------------------------------\n"
             "🐾 ***Miyav! Şimdilik bu kadarrr...***"
         )
-        
-        # Yardım mesajını embed'in içerisine ekliyoruz
-        embed.add_field(name="🐾 Miyav Komutlar:", value=help_message, inline=False)
+
     
         # Kedi temalı küçük bir resim ekleyelim
         embed.set_thumbnail(url="https://imgur.com/a/FsG1xAJ")  # Kedi görseli
