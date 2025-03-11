@@ -12,33 +12,39 @@ class Commands(commands.Cog):
 
     @commands.command()
     async def help(self, ctx):
-        """Yardım komutunu sağlar"""
+        """Yardım komutunu sağlar (Kedi Temalı)"""
         embed = discord.Embed(
-            title="Biso'nun yetenekleri", 
-            description="Biso ile neler yapabilirsiniz:", 
-            color=discord.Color.orange()  # Embed için mavi renk
+            title="🐱 Bisooo'nun Yetenekleri! 🐾", 
+            description="Biso ile neler yapabilirsiniz?", 
+            color=discord.Color.orange()  # Turuncu renk kedi temasına uygun
         )
-
+    
         help_message = (
-            "**!p:** *<Şarkı ismi, YouTube veya Spotify linki> şarkınızı çalarım*\n"
-            "**!s:** *Şarkınızı durdururum*\n"
-            "**!r:** *Şarkınızı devam ettiririm*\n"
-            "**!l:** *Yanınızdan ayrılırım :(*\n"
+            "😺 **Müzik Komutları:**\n"
+            "🐾 **!p:** *<Şarkı ismi veya YouTube linki> Mırnav melodinizi çalarım*\n"
+            "🐾 **!s:** *Biraz kestirmek mi istiyorsunuz?*\n"
+            "🐾 **!r:** *Parti devam ediyor!*\n"
+            "🐾 **!l:** *Yanınızdan ayrılırım... 😿*\n"
             "----------------------------------------------------\n"
-            "**Diğer Komutlar:**\n"
-            "**!h:** *<Şehir> Merak ettiğiniz şehrin hava durumunu söylerim*\n"
-            "**!j:** *Komik şakalar yaparım*\n"
-            "**!kedy:** *Arkadaşlarımı ifşalarım*\n"
-            "**!crypto:** *<coin> coin'in fiyatını gösterebilirim*\n"
+            "🐱 **Diğer Miyav Komutlar:**\n"
+            "🌤 **!h:** *<Şehir> Merak ettiğiniz şehrin hava durumunu tüylerimle hissederim*\n"
+            "🤣 **!j:** *Patilerimle gülmeye hazır olun!*\n"
+            "😼 **!kedy:** *Arkadaşlarımı ifşalarım (Ama sakın beni ele vermeyin!)*\n"
+            "💰 **!crypto:** *<coin> coin'in fiyatını gösterebilirim (Mama parası lazım!)*\n"
             "----------------------------------------------------\n"
-            "***Şimdilik bu kadarrr***"
+            "🐾 ***Miyav! Şimdilik bu kadarrr...***"
         )
         
         # Yardım mesajını embed'in içerisine ekliyoruz
-        embed.add_field(name="Müzik Komutları:", value=help_message, inline=False)
-        
-        # Yardım mesajını embed olarak gönder
-        await ctx.send(embed=embed)
+        embed.add_field(name="🐾 Miyav Komutlar:", value=help_message, inline=False)
+    
+        # Kedi temalı küçük bir resim ekleyelim
+        embed.set_thumbnail(url="https://imgur.com/a/FsG1xAJ")  # Kedi görseli
+        embed.set_footer(text="Biso her zaman burada! 😺")
+
+    # Yardım mesajını embed olarak gönder
+    await ctx.send(embed=embed)
+
 
     @commands.command(name="d")
     @commands.has_permissions(manage_messages=True)
