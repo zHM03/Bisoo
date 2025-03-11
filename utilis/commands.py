@@ -20,6 +20,7 @@ class Commands(commands.Cog):
         )
     
         help_message = (
+            "😺 **Müzik Komutları:**\n"
             "🐾 **!p:** *<Şarkı ismi veya YouTube linki> Mırnav melodinizi çalarım*\n"
             "🐾 **!s:** *Biraz kestirmek mi istiyorsunuz?*\n"
             "🐾 **!r:** *Parti devam ediyor!*\n"
@@ -34,7 +35,7 @@ class Commands(commands.Cog):
             "🐾 ***Miyav! Şimdilik bu kadarrr...***"
         )
         
-        embed.add_field(name="😺 **Müzik Komutları:**\", value=help_message, inline=False)
+        embed.add_field(name="🐾 Miyav Komutlar:", value=help_message, inline=False)
         
         # Kedi temalı küçük bir resim ekleyelim
         embed.set_thumbnail(url="https://i.imgur.com/VwPFi8P.png")  # Doğru kedi görseli linki
@@ -42,6 +43,7 @@ class Commands(commands.Cog):
     
         # **Burada eksik olan satır!**
         await ctx.send(embed=embed)  # Bu satır fonksiyonun dışına çıkmıştı, içine aldım.
+
 
 
 
