@@ -47,6 +47,16 @@ class ProfileCog(commands.Cog):
             return data['response']['player_level']
         return None
 
+    # Kullanıcının sahip olduğu oyun sayısını almak için fonksiyon
+    def get_owned_games_count(self, steam_id):
+        url = f"http://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key={STEAM_API_KEY}&steamid={steam_id}&include_appinfo=true&include_played_free_games=true"
+        response = requests.get(url)
+        data = response.json()
+
+        if 'response' in data and 'games' in data['response']:
+            return len(data['response']['games'])
+        return 0
+
     # Kullanıcı profil bilgilerini ve seviyesini çekmek için !profile komutu
     @commands.command()
     async def profile(self, ctx, *, username: str):
@@ -64,18 +74,23 @@ class ProfileCog(commands.Cog):
             # Kullanıcının Steam seviyesini alıyoruz
             steam_level = self.get_steam_level(steam_id)
 
+            # Sahip olduğu oyun sayısını alıyoruz
+            owned_games_count = self.get_owned_games_count(steam_id)
+
             # Embed mesajını oluşturuyoruz
             embed = discord.Embed(title=f"{user_info['personaname']}'in Steam Profili", color=discord.Color.blue())
             embed.set_thumbnail(url=user_info['avatarfull'])  # Profil fotoğrafını ekliyoruz
             embed.add_field(name="Kullanıcı Adı", value=user_info['personaname'], inline=False)
-            embed.add_field(name="Profil Linki", value=f"[Steam Profili](https://steamcommunity.com/profiles/{steam_id})", inline=False)
 
             # Steam Level bilgisini ekliyoruz
             if steam_level is not None:
                 embed.add_field(name="Steam Seviyesi", value=str(steam_level), inline=False)
             
-            # Oynanan oyunlar hakkında bir şeyler ekleyebilirsiniz (isteğe bağlı)
-            # embed.add_field(name="Oynadığı Oyunlar", value="Bilgiler çekilemiyor", inline=False)
+            # Sahip olduğu oyun sayısını ekliyoruz
+            embed.add_field(name="Sahip Olduğu Oyun Sayısı", value=str(owned_games_count), inline=False)
+
+            # Profil Linki bilgisini ekliyoruz
+            embed.add_field(name="Profil Linki", value=f"[Steam Profili](https://steamcommunity.com/profiles/{steam_id})", inline=False)
 
             # Embed mesajını gönderiyoruz
             await ctx.send(embed=embed)
