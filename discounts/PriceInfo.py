@@ -51,9 +51,5 @@ class PriceCog(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print(f"{self.bot.user} olarak giriş yapıldı.")
-
 async def setup(bot):
     await bot.add_cog(PriceCog(bot))
