@@ -23,7 +23,11 @@ class EpicGames(commands.Cog):
         free_games = []
         for game in games:
             title = game["title"]
-            url = f"https://store.epicgames.com/p/{game.get('productSlug', '')}"
+            slug = game.get("productSlug")  # Ürünün slug'ını al
+            if not slug or slug == "not-found":  # Eğer geçersizse atla
+                continue
+
+            url = f"https://store.epicgames.com/p/{slug}"
             image = game["keyImages"][0]["url"] if "keyImages" in game and game["keyImages"] else None
             description = game.get("description", "Açıklama bulunamadı.")  # Açıklama varsa al
             if description == "Açıklama bulunamadı.":
@@ -67,7 +71,8 @@ class EpicGames(commands.Cog):
                 color=discord.Color.orange()
             )
             embed.add_field(name="🎮 Mama Açıklaması:", value=game["description"], inline=False)
-            embed.set_image(url=game["image"]) if game["image"] else None
+            if game["image"]:
+                embed.set_image(url=game["image"])
             embed.set_footer(text="Epic Games Store - Bedava Oyunlar", icon_url="https://i.imgur.com/OJt0r5Z.png")
 
             await channel.send(embed=embed)
