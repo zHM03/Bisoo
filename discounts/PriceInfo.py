@@ -14,7 +14,7 @@ class PriceCog(commands.Cog):
         self.log_channel_id = 1339957995542544435  # Log mesajlarının gönderileceği kanal ID'si
 
     async def send_log_message(self, message: str):
-        # Log mesajını belirli kanala gönder
+        """Log mesajlarını belirli bir kanala gönderir."""
         channel = self.bot.get_channel(self.log_channel_id)
         if channel:
             await channel.send(message)
@@ -25,45 +25,56 @@ class PriceCog(commands.Cog):
     async def get_game_price(self, ctx, *, game_name: str):
         # Steam API URL'si (AppList ile oyunları listele)
         steam_api_url = f"http://api.steampowered.com/ISteamApps/GetAppList/v2/"
+        await self.send_log_message(f"Steam API'ye istek atılıyor: {steam_api_url}")
 
         # Steam API'den oyun listesi al
-        response = requests.get(steam_api_url)
-        if response.status_code != 200:
-            await ctx.send(f"Steam API'den veri alınırken bir hata oluştu: {response.status_code}")
-            await self.send_log_message(f"Steam API'den veri alınırken hata oluştu: {response.status_code}")
+        try:
+            response = requests.get(steam_api_url)
+            if response.status_code != 200:
+                await ctx.send(f"Steam API'den veri alınırken bir hata oluştu: {response.status_code}")
+                await self.send_log_message(f"Steam API'den veri alınırken hata oluştu: {response.status_code}")
+                return
+
+            data = response.json()
+            await self.send_log_message(f"Steam API yanıtı alındı: {data}")
+        except Exception as e:
+            await ctx.send(f"Steam API'ye bağlanırken bir hata oluştu: {e}")
+            await self.send_log_message(f"Steam API bağlanırken hata: {e}")
             return
-
-        data = response.json()
-
-        # API yanıtını logla
-        await self.send_log_message(f"Steam API yanıtı: {data}")
 
         # Oyunun App ID'sini bul
         game_app_id = None
+        await self.send_log_message(f"{game_name} oyunu aranmaya başlandı...")
         for game in data['applist']['apps']:
             if game_name.lower() in game['name'].lower():
                 game_app_id = game['appid']
+                await self.send_log_message(f"Oyun bulundu! App ID: {game_app_id}")
                 break
 
         if not game_app_id:
             await ctx.send(f"{game_name} adlı oyun bulunamadı!")
-            await self.send_log_message(f"{game_name} adlı oyun bulunamadı!")
+            await self.send_log_message(f"{game_name} adlı oyun bulunamadı.")
             return
 
-        # Oyun için fiyat ve indirim bilgilerini al (bu Steam Store API üzerinden yapılabilir)
+        # Oyun için fiyat ve indirim bilgilerini al (Steam Store API üzerinden)
         price_url = f"https://api.steampowered.com/ISteamEconomy/GetAssetPrices/v1?appid={game_app_id}&key={self.steam_api_key}"
-        price_response = requests.get(price_url)
-        
-        if price_response.status_code != 200:
-            await ctx.send(f"Fiyat verileri alınırken bir hata oluştu: {price_response.status_code}")
-            await self.send_log_message(f"Fiyat verileri alınırken hata oluştu: {price_response.status_code}")
+        await self.send_log_message(f"Fiyat bilgisi almak için Steam API'ye istek atılıyor: {price_url}")
+
+        try:
+            price_response = requests.get(price_url)
+            if price_response.status_code != 200:
+                await ctx.send(f"Fiyat verileri alınırken bir hata oluştu: {price_response.status_code}")
+                await self.send_log_message(f"Fiyat verileri alınırken hata oluştu: {price_response.status_code}")
+                return
+
+            price_data = price_response.json()
+            await self.send_log_message(f"Fiyat API yanıtı alındı: {price_data}")
+        except Exception as e:
+            await ctx.send(f"Fiyat verilerine bağlanırken bir hata oluştu: {e}")
+            await self.send_log_message(f"Fiyat verilerine bağlanırken hata: {e}")
             return
-        
-        price_data = price_response.json()
 
-        # API yanıtını logla
-        await self.send_log_message(f"Fiyat API yanıtı: {price_data}")
-
+        # Fiyat ve indirim bilgilerini kontrol et
         if "price" not in price_data or "discount" not in price_data:
             await ctx.send(f"{game_name} için fiyat bilgisi alınamadı.")
             await self.send_log_message(f"{game_name} için fiyat bilgisi alınamadı.")
@@ -84,7 +95,7 @@ class PriceCog(commands.Cog):
 
         await ctx.send(embed=embed)
 
-        # Fiyat bilgisini de logla
+        # Fiyat bilgisini logla
         await self.send_log_message(f"{game_name} Fiyatı: İndirimli Fiyat: ${discount_price / 100:.2f}, Orijinal Fiyat: ${original_price / 100:.2f}")
 
 async def setup(bot):
