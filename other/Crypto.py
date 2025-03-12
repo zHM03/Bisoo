@@ -92,6 +92,16 @@ class Crypto(commands.Cog):
     @commands.command()
     async def crypto(self, ctx, coin: str = None):
         """Coin fiyatlarını gösterir. Eğer coin belirtilmezse en popüler 10 coini gösterir."""
+        if ctx.channel.id != PRICE_CHANNEL_ID:
+            embed = discord.Embed(
+                title="Hrrrr!",
+                description=f"Lütfen <#{PRICE_CHANNEL_ID}> kanalında buluşalım. Kediler burada mutlu! 😸",
+                color=discord.Color.red()
+            )
+            embed.set_footer(text="Bisonun keyfi 🐾")
+            await ctx.send(embed=embed)
+            return
+
         if coin:
             # Kullanıcı belirli bir coin istemiş
             coin = coin.upper()
