@@ -25,13 +25,16 @@ class Commands(commands.Cog):
             ),
             inline=False
         )
+
+        # 🎮 Oyun Komutları
         embed.add_field(
             name="🎮 Oyun Komutları",
             value=(
                 "🎯 **!profile** `<Steam kullanıcı adı / Steam profil linki>` → Profilini çizerim\n"
             ),
             inline=False
-            
+        )  # <--- BURASI EKLENDİ!
+
         # 😺 Eğlenceli Komutlar
         embed.add_field(
             name="😸 Eğlenceli Komutlar",
@@ -48,8 +51,8 @@ class Commands(commands.Cog):
             name="🐾 Patisyonel Komutlar",
             value=(
                 "🌤 **!h** `<şehir>` → Hava nasıl, biliyor musun? Ben de bilmiyorum! Ama öğrenebiliriz...\n"
-                "💰 **!crypto** `<coin>` → Coin fiyatını gösteririm (Mama parası lazim!)\n"
-                "🎡 **!wheel** `<2 seçenek>` → Çark çeviririmmm\n
+                "💰 **!crypto** `<coin>` → Coin fiyatını gösteririm (Mama parası lazım!)\n"
+                "🎡 **!wheel** `<2 seçenek>` → Çark çeviririmmm\n"
             ),
             inline=False
         )
