@@ -19,7 +19,7 @@ class ProfileCog(commands.Cog):
         url = f"http://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key={STEAM_API_KEY}&vanityurl={vanity_url}"
         response = requests.get(url)
         data = response.json()
-        
+
         if data['response']['success'] == 1:
             return data['response']['steamid']
         else:
@@ -98,14 +98,14 @@ class ProfileCog(commands.Cog):
     async def profile(self, ctx, *, username: str):
         # Kullanıcı adı ile Steam ID'yi alıyoruz
         steam_id = self.get_steam_id_from_vanity_url(username)
-        
+
         if not steam_id:
             await ctx.send(f"{username} adında geçerli bir Steam profili bulamadım.")
             return
-        
+
         # Steam ID ile kullanıcı bilgilerini alıyoruz
         user_info = self.get_steam_user_info(steam_id)
-        
+
         if user_info:
             # Kullanıcının Steam seviyesini alıyoruz
             steam_level = self.get_steam_level(steam_id)
@@ -132,8 +132,6 @@ class ProfileCog(commands.Cog):
             # En çok oynanan oyunlar
             if top_games:
                 embed.add_field(name="En Çok Oynadığı Oyunlar", value="\n".join([f"{game[0]} - {game[1]} saat" for game in top_games]), inline=False)
-
-            
 
             # Arka plan görselini ekleyebiliriz
             if background_image:
