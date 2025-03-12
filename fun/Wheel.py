@@ -28,8 +28,8 @@ class Cark(commands.Cog):
             await ctx.send("⚠️ En az 2 seçenek girmelisin! Örnek: `!çark a b c d e`")
             return
 
-        tur_sayısı = 5  # Kaç tam tur dönecek (Azaltıldı)
-        kare_sayısı = 10  # Animasyon için kare sayısı (Azaltıldı)
+        tur_sayısı = 10  # Kaç tam tur dönecek (Azaltıldı)
+        kare_sayısı = 16  # Animasyon için kare sayısı (Azaltıldı)
         açılar = np.linspace(0, 360 * tur_sayısı, kare_sayısı)  # Döndürme açıları
         son_açı = random.uniform(0, 360)  # Rastgele son durma açısı
         çark_açısı = açılar + son_açı
