@@ -82,7 +82,7 @@ class ProfileCog(commands.Cog):
             return player.get('profilebackground', None)
         return None
 
-    # Kullanıcının hesap açılış tarihini almak (tahmin)
+    # Hesap açılış tarihini almak
     def get_account_creation_date(self, steam_id):
         url = f"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key={STEAM_API_KEY}&steamids={steam_id}"
         response = requests.get(url)
@@ -123,9 +123,9 @@ class ProfileCog(commands.Cog):
             account_creation_date = self.get_account_creation_date(steam_id)
 
             # Embed mesajını oluşturuyoruz
-            embed = discord.Embed(title=f"[{user_info['personaname']}]({user_info['profileurl']})'in Steam Profili", color=discord.Color.blue())
+            embed = discord.Embed(title=f"{user_info['personaname']}'in Steam Profili", color=discord.Color.blue())
             embed.set_thumbnail(url=user_info['avatarfull'])  # Profil fotoğrafını ekliyoruz
-            embed.add_field(name="Kullanıcı Adı", value=user_info['personaname'], inline=False)
+            embed.add_field(name="Kullanıcı Adı", value=f"[{user_info['personaname']}]({user_info['profileurl']})", inline=False)
             embed.add_field(name="Steam Seviyesi", value=str(steam_level), inline=False)
             embed.add_field(name="Sahip Olduğu Oyun Sayısı", value=str(owned_games_count), inline=False)
 
