@@ -5,44 +5,52 @@ class Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.CommandNotFound):
-            await ctx.send("Hrr böyle komut yok, '!help' yazabilirsiniz!")
-
     @commands.command()
     async def help(self, ctx):
         """Yardım komutunu sağlar (Kedi Temalı)"""
         embed = discord.Embed(
-            title="🐱 Bisooo'nun Yetenekleri! 🐾", 
-            description="Biso ile neler yapabilirsiniz?", 
+            title="🐱 Bisooo yardıma ulaştı! 🐾", 
+            description="Miyav! Beni çağırdığını duydum! İşte sana tüylerimi kabartarak hazırladığım komutlar!", 
             color=discord.Color.orange()
         )
-    
-        help_message = (
-            "😺 **Müzik Komutları:**\n"
-            "🐾 **!p:** *<Şarkı ismi veya YouTube linki> Mırnav melodinizi çalarım*\n"
-            "🐾 **!s:** *Biraz kestirmek mi istiyorsunuz?*\n"
-            "🐾 **!r:** *Parti devam ediyor!*\n"
-            "🐾 **!l:** *Yanınızdan ayrılırım... 😿*\n"
-            "----------------------------------------------------\n"
-            "🐱 **Diğer Miyav Komutlar:**\n"
-            "🌤 **!h:** *<Şehir> Merak ettiğiniz şehrin hava durumunu tüylerimle hissederim*\n"
-            "🤣 **!j:** *Patilerimle gülmeye hazır olun!*\n"
-            "😼 **!kedy:** *Arkadaşlarımı ifşalarım (Ama sakın beni ele vermeyin!)*\n"
-            "💰 **!crypto:** *<coin> coin'in fiyatını gösterebilirim (Mama parası lazım!)*\n"
-            "----------------------------------------------------\n"
-            "🐾 ***Miyav! Şimdilik bu kadarrr...***"
+
+        # 🎵 Müzik Komutları
+        embed.add_field(
+            name="🎵 Mırnav Melodileri",
+            value=(
+                "🐾 **!p** `<şarkı adı / YouTube linki>` → Tırnaklarımla plağı çeviriyorum\n"
+                "🐾 **!s** → Şşş... Biraz uyku vakti\n"
+                "🐾 **!r** → Miyav! Parti devam etsin\n"
+                "🐾 **!l** → Mırlamadan uzaklaşıyorum\n"
+            ),
+            inline=False
         )
-        
-        embed.description = help_message
-        
-        # Kedi temalı küçük bir resim ekleyelim
-        embed.set_thumbnail(url="https://i.imgur.com/90rVRLz.jpeg")  # Doğru kedi görseli linki
-        embed.set_footer(text="Biso her zaman burada! 😺")
-    
-        # **Burada eksik olan satır!**
-        await ctx.send(embed=embed)  # Bu satır fonksiyonun dışına çıkmıştı, içine aldım.
+
+        # 😺 Eğlenceli Komutlar
+        embed.add_field(
+            name="😸 Eğlenceli Komutlar",
+            value=(
+                "🤣 **!j** → Biraz kahkaha iyidir! Miyav-miyav bir şaka geliyor\n"
+                "📸 **!kedy** → Pati dostlarımı ifşa ediyorum!\n"
+            ),
+            inline=False
+        )
+
+        # 🐾 Patisyonel Komutlar
+        embed.add_field(
+            name="🐾 Patisyonel Komutlar",
+            value=(
+                "🌤 **!h** `<şehir>` → Hava nasıl, biliyor musun? Ben de bilmiyorum! Ama öğrenebiliriz...\n"
+                "💰 **!crypto** `<coin>` → Mama parası hesaplamam lazım!\n"
+            ),
+            inline=False
+        )
+
+    # Thumbnail ve Footer ekleyelim
+        embed.set_thumbnail(url="https://i.imgur.com/90rVRLz.jpeg")  # Küçük kedi görseli
+        embed.set_footer(text="Tüylerimi kabarttım, her zaman yardıma hazırım! Miyav seslenmen yeter! 🐾")
+
+        await ctx.send(embed=embed)
 
 
 
