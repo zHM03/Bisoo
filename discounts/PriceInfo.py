@@ -13,12 +13,12 @@ class SteamDB(commands.Cog):
         """SteamDB'den oyunun fiyat bilgisini ve indirim geçmişini alır."""
         game_id = await self.get_steam_game_id(game_name)
         if not game_id:
-            return await ctx.send("Oyun bulunamadı.")
+            return await ctx.send(f"Oyun '{game_name}' SteamDB üzerinde bulunamadı.")
 
         url = f"{self.base_url}{game_id}/"
         response = requests.get(url)
         if response.status_code != 200:
-            return await ctx.send("SteamDB verisi alınamadı.")
+            return await ctx.send("SteamDB verisi alınamadı. Lütfen daha sonra tekrar deneyin.")
 
         soup = BeautifulSoup(response.text, "html.parser")
 
