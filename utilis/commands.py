@@ -16,7 +16,7 @@ class Commands(commands.Cog):
 
         # 🎵 Müzik Komutları
         embed.add_field(
-            name="🎵 Mırnav Melodileri",
+            name="🎶Mırnav Melodileri🎶",
             value=(
                 "▶️ **!p** `<şarkı adı / YouTube linki>` → Tırnaklarımla plağı çeviriyorum\n"
                 "⏸️ **!s** → Şşş... Biraz uyku vakti\n"
@@ -25,13 +25,20 @@ class Commands(commands.Cog):
             ),
             inline=False
         )
-
+        embed.add_field(
+            name="🎮 Oyun Komutları",
+            value=(
+                "🎯 **!profile** `<Steam kullanıcı adı / Steam profil linki>` → Profilini çizerim\n"
+            ),
+            inline=False
+            
         # 😺 Eğlenceli Komutlar
         embed.add_field(
             name="😸 Eğlenceli Komutlar",
             value=(
                 "😹 **!j** → Biraz kahkaha iyidir! Miyav-miyav bir şaka geliyor\n"
                 "🙀 **!kedy** → Pati dostlarımı ifşa ediyorum!\n"
+                "🖼 **!wallpaper** →<resim> Patilerimle resim çizerim!\n"
             ),
             inline=False
         )
@@ -42,6 +49,7 @@ class Commands(commands.Cog):
             value=(
                 "🌤 **!h** `<şehir>` → Hava nasıl, biliyor musun? Ben de bilmiyorum! Ama öğrenebiliriz...\n"
                 "💰 **!crypto** `<coin>` → Coin fiyatını gösteririm (Mama parası lazim!)\n"
+                "🎡 **!wheel** `<2 seçenek>` → Çark çeviririmmm\n
             ),
             inline=False
         )
