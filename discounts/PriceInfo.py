@@ -3,6 +3,7 @@ from discord.ext import commands
 import requests
 import os
 from dotenv import load_dotenv
+import re
 
 # .env dosyasını yükle
 load_dotenv()
@@ -14,8 +15,21 @@ class ProfileCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    # Linkten Steam ID'yi almak
+    def extract_steam_id_from_link(self, link):
+        # https://steamcommunity.com/profiles/STEAM_ID gibi linkler için
+        match = re.search(r'https?://steamcommunity\.com/profiles/(\d+)', link)
+        if match:
+            return match.group(1)
+        return None
+
     # Steam ID'yi kullanıcı adından almak için fonksiyon
     def get_steam_id_from_vanity_url(self, vanity_url):
+        # Eğer verilen URL zaten bir Steam ID ise, doğrudan döndürüyoruz
+        if vanity_url.isdigit() and len(vanity_url) == 17:
+            return vanity_url
+
+        # Eğer verilen URL bir vanity URL ise, Steam ID'ye dönüştürmek için API'yi kullanıyoruz
         url = f"http://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key={STEAM_API_KEY}&vanityurl={vanity_url}"
         response = requests.get(url)
         data = response.json()
@@ -37,7 +51,7 @@ class ProfileCog(commands.Cog):
         else:
             return None
 
-    # Kullanıcının Steam level'ını almak için fonksiyon
+    # Kullanıcının Steam seviyesini almak için fonksiyon
     def get_steam_level(self, steam_id):
         url = f"http://api.steampowered.com/IPlayerService/GetSteamLevel/v1/?key={STEAM_API_KEY}&steamid={steam_id}"
         response = requests.get(url)
@@ -96,8 +110,8 @@ class ProfileCog(commands.Cog):
     # Kullanıcı profil bilgilerini ve seviyesini çekmek için !profile komutu
     @commands.command()
     async def profile(self, ctx, *, username: str):
-        # Kullanıcı adı ile Steam ID'yi alıyoruz
-        steam_id = self.get_steam_id_from_vanity_url(username)
+        # Eğer verilen girdi bir link ise Steam ID'yi çıkar
+        steam_id = self.extract_steam_id_from_link(username) or self.get_steam_id_from_vanity_url(username)
 
         if not steam_id:
             await ctx.send(f"{username} adında geçerli bir Steam profili bulamadım.")
