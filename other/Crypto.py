@@ -10,84 +10,88 @@ import datetime
 load_dotenv()
 
 # API anahtarını .env dosyasından al
-API_KEY = os.getenv('CRYPTOCOMPARE_API_KEY')  # .env dosyasındaki anahtarı burada kullanıyoruz
+API_KEY = os.getenv('CRYPTOCOMPARE_API_KEY')
 BASE_URL = "https://min-api.cryptocompare.com/data/price"
 
-def log_message(self, message):
+# Kanal ID'leri
+LOG_CHANNEL_ID = 1339957995542544435  # Keep-alive mesajlarının atılacağı kanal
+PRICE_CHANNEL_ID = 1340760164617424938  # BTC fiyatının atılacağı kanal
+
+def log_message(message):
     """Log mesajını tarih, saat ile birlikte formatlayarak döndür"""
-    now = datetime.now()
+    now = datetime.datetime.utcnow() + datetime.timedelta(hours=3)  # Türkiye saati
     timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
     return f"[{timestamp}] {message}"
 
-async def log_error(self, message):
+async def log_error(bot, message):
     """Log kanalına hata mesajı gönder"""
-    formatted_message = self.log_message(message)
-    for guild in self.bot.guilds:
-        log_channel = await self.get_log_channel(guild)
-        if log_channel:
-            await log_channel.send(f"**Log:** {formatted_message}")
+    formatted_message = log_message(message)
+    log_channel = bot.get_channel(LOG_CHANNEL_ID)
+    if log_channel:
+        await log_channel.send(f"⚠ **Hata:** {formatted_message}")
 
-async def get_log_channel(self, guild):
+async def get_log_channel(guild):
     """Log kanalını döndüren fonksiyon"""
-    log_channel = discord.utils.get(guild.text_channels, name="biso-log")
-    return log_channel
+    return discord.utils.get(guild.text_channels, name="biso-log")
 
 def get_crypto_price(coin_symbol):
-    url = f"{BASE_URL}?fsym={coin_symbol.upper()}&tsyms=USD,TRY"  # Hem USD hem de TRY fiyatını alıyoruz
-    headers = {
-        'Authorization': f'Apikey {API_KEY}'
-    }
+    """API'den kripto para fiyatlarını alır"""
+    url = f"{BASE_URL}?fsym={coin_symbol.upper()}&tsyms=USD,TRY"
+    headers = {'Authorization': f'Apikey {API_KEY}'}
     response = requests.get(url, headers=headers)
     data = response.json()
-
-    # API'den gelen yanıtın doğruluğunu kontrol et
-    print(f"API Yanıtı: {data}")
 
     if 'USD' in data and 'TRY' in data:
         return data['USD'], data['TRY']
     return None, None
 
 def format_price(price):
-    """Sayısal değeri daha okunabilir hale getiren format fonksiyonu"""
+    """Sayısal değeri daha okunabilir hale getirir"""
     return "{:,.2f}".format(price).replace(",", ".")
 
 class Crypto(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.send_daily_price.start()  # Her gün saat 00:00'da mesaj gönderecek
+        self.send_daily_price.start()
+        self.keep_alive.start()
 
     def cog_unload(self):
         self.send_daily_price.cancel()
+        self.keep_alive.cancel()
 
-    @tasks.loop(hours=24, reconnect=True)  # Saatlik olarak yeniden başlatmaya gerek yok, 24 saatlik loop ile 00:00'da çalışacak
+    @tasks.loop(minutes=1)
     async def send_daily_price(self):
-        now = datetime.datetime.now()
-        # Eğer saat 00:00 ise, fiyatı gönder
+        """Her gün 00:00'da BTC fiyatını gönderir"""
+        now = datetime.datetime.utcnow() + datetime.timedelta(hours=3)  # Türkiye saati
         if now.hour == 0 and now.minute == 0:
-            channel = self.bot.get_channel(1340760164617424938)  # Burada CHANNEL_ID ile kanal ID'sini yazmalısın
-            price_usd, price_try = get_crypto_price("BTC")
-            if price_usd and price_try:
-                # Sayıları formatlayarak göndereceğiz
-                formatted_usd = format_price(price_usd)
-                formatted_try = format_price(price_try)
-                await channel.send(f"24 saatlik BTC fiyatı: ${formatted_usd} / ₺{formatted_try}... (YTD)")
-            else:
-                await self.bot.music.log_error("BTC fiyatı alınamadı.")
-        await asyncio.sleep(60)  # Her dakika kontrol edip 00:00'ı bekler
+            channel = self.bot.get_channel(PRICE_CHANNEL_ID)
+            if channel:
+                price_usd, price_try = get_crypto_price("BTC")
+                if price_usd and price_try:
+                    formatted_usd = format_price(price_usd)
+                    formatted_try = format_price(price_try)
+                    await channel.send(f"📢 **24 Saatlik BTC Fiyatı:**\n💲 ${formatted_usd} / ₺{formatted_try} (YTD)")
+                else:
+                    await log_error(self.bot, "BTC fiyatı alınamadı.")
+
+    @tasks.loop(minutes=10)
+    async def keep_alive(self):
+        """Bot'un Railway tarafından kapatılmasını önler"""
+        log_channel = self.bot.get_channel(LOG_CHANNEL_ID)
+        if log_channel:
+            await log_channel.send("✅ **Bot hala çalışıyor...**")
 
     @commands.command()
     async def crypto(self, ctx, coin: str):
-        """Belirli bir coin'in fiyatını yazacak komut"""
-        # Coin sembolünü küçük harfe çeviriyoruz
+        """Belirtilen coin'in anlık fiyatını getirir"""
         coin_symbol = coin.lower()
         price_usd, price_try = get_crypto_price(coin_symbol)
         if price_usd and price_try:
-            # Sayıları formatlayarak göndereceğiz
             formatted_usd = format_price(price_usd)
             formatted_try = format_price(price_try)
-            await ctx.send(f"{coin.upper()} fiyatı: ${formatted_usd} / ₺{formatted_try}... (YTD)")
+            await ctx.send(f"📊 **{coin.upper()} Fiyatı:**\n💲 ${formatted_usd} / ₺{formatted_try} (YTD)")
         else:
-            await ctx.send(f"{coin.upper()} için fiyat verisi bulunamadı.")
+            await ctx.send(f"❌ **{coin.upper()} için fiyat verisi bulunamadı.**")
 
 async def setup(bot):
     await bot.add_cog(Crypto(bot))
