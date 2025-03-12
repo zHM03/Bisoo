@@ -59,7 +59,7 @@ class Commands(commands.Cog):
 
         # Thumbnail ve Footer ekleyelim
         embed.set_thumbnail(url="https://i.imgur.com/90rVRLz.jpeg")  # Küçük kedi görseli
-        embed.set_footer(text="Tüylerimi kabarttım, her zaman yardıma hazırım! Miyav seslenmen yeter! 🐾")
+        embed.set_footer(text="Tüylerimi kabarttım, her zaman yardıma hazırım! Miyavlaman yeter! 🐾")
 
         await ctx.send(embed=embed)
 
