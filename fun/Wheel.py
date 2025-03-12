@@ -25,7 +25,7 @@ class Cark(commands.Cog):
             return
 
         if len(seçenekler) < 2:
-            await ctx.send("⚠️ En az 2 seçenek girmelisin! Örnek: `!çark a b c d e`")
+            await ctx.send("⚠️ En az 2 seçenek girmelisin! Örnek: `!wheel a b c d e`")
             return
 
         tur_sayısı = 10  # Kaç tam tur dönecek (Azaltıldı)
