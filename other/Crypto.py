@@ -1,42 +1,97 @@
 import discord
+from discord.ext import commands, tasks
 import requests
-import os
-from discord.ext import commands
+import asyncio
 from dotenv import load_dotenv
-from datetime import datetime
+import os
+import datetime
 
+# .env dosyasını yükle
 load_dotenv()
 
-WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")  # API anahtarını .env'den al
-BASE_URL = "http://api.weatherapi.com/v1/current.json"  # Yeni API URL'si
-PRICE_CHANNEL_ID = 1340760164617424938  # Belirtilen kanal ID'si
+# API anahtarını .env dosyasından al
+API_KEY = os.getenv('CRYPTOCOMPARE_API_KEY')
+BASE_URL = "https://min-api.cryptocompare.com/data/price"
 
-class Weather(commands.Cog):
+# Kanal ID'leri
+LOG_CHANNEL_ID = 1339957995542544435  # Keep-alive mesajlarının atılacağı kanal
+PRICE_CHANNEL_ID = 1340760164617424938  # BTC fiyatının atılacağı kanal
+
+# En popüler 10 coin
+TOP_COINS = ["BTC", "ETH", "SOL","LTC", "RENDER", "ONDO", "FET", "GRT"]
+
+def log_message(message):
+    """Log mesajını tarih, saat ile birlikte formatlayarak döndür"""
+    now = datetime.datetime.utcnow() + datetime.timedelta(hours=3)  # Türkiye saati
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    return f"[{timestamp}] {message}"
+
+async def log_error(bot, message):
+    """Log kanalına hata mesajı gönder"""
+    formatted_message = log_message(message)
+    log_channel = bot.get_channel(LOG_CHANNEL_ID)
+    if log_channel:
+        await log_channel.send(f"⚠ **Hata:** {formatted_message}")
+
+def get_crypto_price(coin):
+    """API'den tek bir coin'in fiyatını alır"""
+    url = f"{BASE_URL}?fsym={coin.upper()}&tsyms=USD,TRY"
+    headers = {'Authorization': f'Apikey {API_KEY}'}
+    response = requests.get(url, headers=headers)
+    data = response.json()
+
+    # Log için API yanıtını döndürelim
+    print(f"API Yanıtı ({coin}): {data}")
+
+    if 'USD' in data and 'TRY' in data:
+        return data['USD'], data['TRY']
+    return None, None
+
+def format_price(price):
+    """Sayısal değeri daha okunabilir hale getirir"""
+    return "{:,.2f}".format(price).replace(",", ".")
+
+class Crypto(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.send_daily_price.start()
+        self.keep_alive.start()
 
-    def log_message(self, message):
-        """Log mesajını tarih, saat ile birlikte formatlayarak döndür"""
-        now = datetime.now()
-        timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
-        return f"[{timestamp}] {message}"
+    def cog_unload(self):
+        self.send_daily_price.cancel()
+        self.keep_alive.cancel()
 
-    async def log_error(self, message):
-        """Log kanalına hata mesajı gönder"""
-        formatted_message = self.log_message(message)
-        for guild in self.bot.guilds:
-            log_channel = await self.get_log_channel(guild)
-            if log_channel:
-                await log_channel.send(f"**Log:** {formatted_message}")
+    @tasks.loop(minutes=1)
+    async def send_daily_price(self):
+        """Her gün 00:00'da BTC fiyatını gönderir"""
+        now = datetime.datetime.utcnow() + datetime.timedelta(hours=3)  # Türkiye saati
+        if now.hour == 0 and now.minute == 0:
+            channel = self.bot.get_channel(PRICE_CHANNEL_ID)
+            if channel:
+                price_usd, price_try = get_crypto_price("BTC")
+                if price_usd and price_try:
+                    formatted_usd = format_price(price_usd)
+                    formatted_try = format_price(price_try)
+                    embed = discord.Embed(
+                        title="🐱 24 Saatlik BTC Fiyatı 🐾",
+                        description=f"**${formatted_usd}** /**₺{formatted_try}**\n\n*Bu fiyatlar sadece bilgi amaçlıdır. YTD!*",
+                        color=discord.Color.gold()
+                    )
+                    embed.set_footer(text="Meow meow, kripto dünyası seni bekliyor!")
+                    await channel.send(embed=embed)
+                else:
+                    await log_error(self.bot, "BTC fiyatı alınamadı.")
 
-    async def get_log_channel(self, guild):
-        """Log kanalını döndüren fonksiyon"""
-        log_channel = discord.utils.get(guild.text_channels, name="biso-log")
-        return log_channel
+    @tasks.loop(minutes=10)
+    async def keep_alive(self):
+        """Bot'un Railway tarafından kapatılmasını önler"""
+        log_channel = self.bot.get_channel(LOG_CHANNEL_ID)
+        if log_channel:
+            await log_channel.send("✅ **Bot hala çalışıyor...**")
 
-    @commands.command(name="h")
-    async def get_weather(self, ctx, *, city: str = None):
-        """Belirtilen şehir için hava durumu bilgisini getirir."""
+    @commands.command()
+    async def crypto(self, ctx, coin: str = None):
+        """Coin fiyatlarını gösterir. Eğer coin belirtilmezse en popüler 10 coini gösterir."""
         if ctx.channel.id != PRICE_CHANNEL_ID:
             embed = discord.Embed(
                 title="Hrrrr!",
@@ -47,46 +102,48 @@ class Weather(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        if not city:
-            await ctx.send("Lütfen bir şehir belirtin.")
-            return
+        if coin:
+            # Kullanıcı belirli bir coin istemiş
+            coin = coin.upper()
+            price_usd, price_try = get_crypto_price(coin)
+            if price_usd and price_try:
+                formatted_usd = format_price(price_usd)
+                formatted_try = format_price(price_try)
+                embed = discord.Embed(
+                    title=f"🐾 {coin} Fiyatı 🐱",
+                    description=f"**${formatted_usd}** /**₺{formatted_try}**\n\n*Bu fiyatlar patili borsa analizi içermez*",
+                    color=discord.Color.yellow()
+                )
+                embed.set_footer(text="Mır mır! Kriptolar hep değişir, dikkatli ol! (YTD).")
+                await ctx.send(embed=embed)
+            else:
+                await ctx.send(f"❌ **{coin} için fiyat verisi bulunamadı.** Mırmır, tekrar dene!")
 
-        try:
-            params = {
-                "key": WEATHER_API_KEY,  # API Anahtarı
-                "q": city,  # Şehir adı
-                "lang": "tr"  # Türkçe açıklamalar için
-            }
-            response = requests.get(BASE_URL, params=params)
-            data = response.json()
-
-            print("API Yanıtı:", data)  # Terminalde API yanıtını kontrol et
-
-            if "error" in data:
-                hata_mesajı = data["error"]["message"]
-                await ctx.send(f"❌ Şehir bulunamadı! Hata: {hata_mesajı}")
-                return
-
-            şehir = data["location"]["name"]
-            ülke = data["location"]["country"]
-            sıcaklık = data["current"]["temp_c"]
-            açıklama = data["current"]["condition"]["text"]
-            nem = data["current"]["humidity"]
-            rüzgar = data["current"]["wind_kph"]
-
+        else:
+            # Kullanıcı genel coin fiyatlarını istiyor
             embed = discord.Embed(
-                title=f"🌍 {şehir}, {ülke} için hava durumu",
-                color=discord.Color.blue()
+                title="🐱 Bakalım mama parasını nerden çıkaracağız! 🐾",
+                description="Bu fiyatlar patili borsa analizi içermez!",
+                color=discord.Color.yellow()
             )
-            embed.add_field(name="🌡️ Sıcaklık", value=f"{sıcaklık}°C", inline=True)
-            embed.add_field(name="💧 Nem", value=f"%{nem}", inline=True)
-            embed.add_field(name="💨 Rüzgar Hızı", value=f"{rüzgar} km/h", inline=True)
-            embed.add_field(name="🌫️ Durum", value=açıklama.capitalize(), inline=False)
-
+            for coin in TOP_COINS:
+                price_usd, price_try = get_crypto_price(coin)
+                if price_usd and price_try:
+                    formatted_usd = format_price(price_usd)
+                    formatted_try = format_price(price_try)
+                    embed.add_field(
+                        name=f"🐾 {coin}",
+                        value=f"**${formatted_usd}**\n**₺{formatted_try}**",
+                        inline=True
+                    )
+                else:
+                    embed.add_field(
+                        name=f"🐾 {coin}",
+                        value="❌ **Fiyat alınamadı.**",
+                        inline=True
+                    )
+            embed.set_footer(text="Mır mır! Kriptolar hep değişir, dikkatli ol! (YTD).")
             await ctx.send(embed=embed)
 
-        except Exception as e:
-            await self.bot.music.log_error(f"⚠️ Weather extensionda bir hata oluştu: {e}")
-
 async def setup(bot):
-    await bot.add_cog(Weather(bot))
+    await bot.add_cog(Crypto(bot))
