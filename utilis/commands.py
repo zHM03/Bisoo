@@ -18,10 +18,10 @@ class Commands(commands.Cog):
         embed.add_field(
             name="🎵 Mırnav Melodileri",
             value=(
-                "🐾 **!p** `<şarkı adı / YouTube linki>` → Tırnaklarımla plağı çeviriyorum\n"
-                "🐾 **!s** → Şşş... Biraz uyku vakti\n"
-                "🐾 **!r** → Miyav! Parti devam etsin\n"
-                "🐾 **!l** → Mırlamadan uzaklaşıyorum\n"
+                "▶️ **!p** `<şarkı adı / YouTube linki>` → Tırnaklarımla plağı çeviriyorum\n"
+                "⏸️ **!s** → Şşş... Biraz uyku vakti\n"
+                "⏯️ **!r** → Miyav! Parti devam etsin\n"
+                "⏹️ **!l** → Mırlamadan uzaklaşıyorum\n"
             ),
             inline=False
         )
@@ -46,14 +46,11 @@ class Commands(commands.Cog):
             inline=False
         )
 
-    # Thumbnail ve Footer ekleyelim
+        # Thumbnail ve Footer ekleyelim
         embed.set_thumbnail(url="https://i.imgur.com/90rVRLz.jpeg")  # Küçük kedi görseli
         embed.set_footer(text="Tüylerimi kabarttım, her zaman yardıma hazırım! Miyav seslenmen yeter! 🐾")
 
         await ctx.send(embed=embed)
-
-
-
 
     @commands.command(name="d")
     @commands.has_permissions(manage_messages=True)
