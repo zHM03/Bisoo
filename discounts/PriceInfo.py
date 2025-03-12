@@ -1,18 +1,23 @@
 import discord
 from discord.ext import commands
 import requests
-import json
+import os
+from dotenv import load_dotenv
+
+# .env dosyasını yükle
+load_dotenv()
 
 class PriceCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.steam_api_key = os.getenv("STEAM_API_KEY")  # .env dosyasındaki Steam API anahtarını al
 
     @commands.command(name="price")
     async def get_game_price(self, ctx, *, game_name: str):
-        # Steam API URL'si
-        steam_api_url = f"https://api.steampowered.com/ISteamApps/GetAppList/v2/"
-        
-        # Steam'de oyun adı ile ilgili bilgiyi al
+        # Steam API URL'si (AppList ile oyunları listele)
+        steam_api_url = f"http://api.steampowered.com/ISteamApps/GetAppList/v2/"
+
+        # Steam API'den oyun listesi al
         response = requests.get(steam_api_url)
         data = response.json()
 
@@ -27,8 +32,8 @@ class PriceCog(commands.Cog):
             await ctx.send(f"{game_name} adlı oyun bulunamadı!")
             return
 
-        # Oyunun fiyat bilgilerini al
-        price_url = f"https://api.steampowered.com/ISteamEconomy/GetAssetPrices/v1?appid={game_app_id}"
+        # Oyun için fiyat ve indirim bilgilerini al (bu Steam Store API üzerinden yapılabilir)
+        price_url = f"https://api.steampowered.com/ISteamEconomy/GetAssetPrices/v1?appid={game_app_id}&key={self.steam_api_key}"
         price_response = requests.get(price_url)
         price_data = price_response.json()
 
