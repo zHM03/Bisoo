@@ -16,43 +16,43 @@ class Commands(commands.Cog):
 
         # 🎵 Müzik Komutları
         embed.add_field(
-            name="🎶Mırnav Melodileri🎶",
+            name="🎶 Mırnav Melodileri 🎶",
             value=(
-                "▶️ **!p** `<şarkı adı / YouTube linki>` → Tırnaklarımla plağı çeviriyorum\n"
-                "⏸️ **!s** → Şşş... Biraz uyku vakti\n"
-                "⏯️ **!r** → Miyav! Parti devam etsin\n"
-                "⏹️ **!l** → Mırlamadan uzaklaşıyorum\n"
+                "**!p** `<şarkı adı / YouTube linki>` → Tırnaklarımla plağı çeviriyorum\n"
+                "**!s** → Şşş... Biraz uyku vakti\n"
+                "**!r** → Miyav! Parti devam etsin\n"
+                "**!l** → Mırlamadan uzaklaşıyorum\n"
             ),
             inline=False
         )
 
         # 🎮 Oyun Komutları
         embed.add_field(
-            name="🎮 Oyun Komutları",
+            name="🎮 Oyun Komutları 🎮",
             value=(
-                "🎯 **!profile** `<Steam kullanıcı adı / Steam profil linki>` → Profilini çizerim\n"
+                "**!profile** `<Steam kullanıcı adı / Steam profil linki>` → Profilini çizerim\n"
             ),
             inline=False
         )  # <--- BURASI EKLENDİ!
 
         # 😺 Eğlenceli Komutlar
         embed.add_field(
-            name="😸 Eğlenceli Komutlar",
+            name="😸 Eğlenceli Komutlar 😸",
             value=(
-                "😹 **!j** → Biraz kahkaha iyidir! Miyav-miyav bir şaka geliyor\n"
-                "🙀 **!kedy** → Pati dostlarımı ifşa ediyorum!\n"
-                "🖼 **!wallpaper** →<resim> Patilerimle resim çizerim!\n"
+                "**!j** → Biraz kahkaha iyidir! Miyav-miyav bir şaka geliyor\n"
+                "**!kedy** → Pati dostlarımı ifşa ediyorum!\n"
+                "**!wallpaper** →<resim> Patilerimle resim çizerim!\n"
             ),
             inline=False
         )
 
         # 🐾 Patisyonel Komutlar
         embed.add_field(
-            name="🐾 Patisyonel Komutlar",
+            name="🐾 Patisyonel Komutlar 🐾",
             value=(
-                "🌤 **!h** `<şehir>` → Hava nasıl, biliyor musun? Ben de bilmiyorum! Ama öğrenebiliriz...\n"
-                "💰 **!crypto** `<coin>` → Coin fiyatını gösteririm (Mama parası lazım!)\n"
-                "🎡 **!wheel** `<2 seçenek>` → Çark çeviririmmm\n"
+                "**!h** `<şehir>` → Hava nasıl, biliyor musun? Ben de bilmiyorum! Ama öğrenebiliriz...\n"
+                "**!crypto** `<coin>` → Coin fiyatını gösteririm (Mama parası lazım!)\n"
+                "**!wheel** `<2 seçenek>` → Çark çeviririmmm\n"
             ),
             inline=False
         )
