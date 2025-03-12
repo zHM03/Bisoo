@@ -12,6 +12,18 @@ class Cark(commands.Cog):
 
     @commands.command()
     async def çark(self, ctx, *seçenekler):
+        kanal_id = 1340760164617424938  # Hedef kanalın ID'si
+        if ctx.channel.id != kanal_id:  # Eğer komut belirlenen kanalda değilse
+            kanal = ctx.guild.get_channel(kanal_id)
+            embed = discord.Embed(
+                title="Hrrrr!",
+                description=f"Lütfen {kanal.mention}'de buluşalım. Kediler burada mutlu! 😸",
+                color=discord.Color.red()
+            )
+            embed.set_footer(text="Bisonun keyfi 🐾")
+            await ctx.send(embed=embed)
+            return
+
         if len(seçenekler) < 2:
             await ctx.send("⚠️ En az 2 seçenek girmelisin! Örnek: `!çark a b c d e`")
             return
