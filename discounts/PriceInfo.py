@@ -55,5 +55,5 @@ class PriceCog(commands.Cog):
     async def on_ready(self):
         print(f"{self.bot.user} olarak giriş yapıldı.")
 
-def setup(bot):
-    bot.add_cog(PriceCog(bot))
+async def setup(bot):
+    await bot.add_cog(PriceCog(bot))
