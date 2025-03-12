@@ -30,8 +30,8 @@ class Commands(commands.Cog):
         embed.add_field(
             name="😸 Eğlenceli Komutlar",
             value=(
-                "🤣 **!j** → Biraz kahkaha iyidir! Miyav-miyav bir şaka geliyor\n"
-                "📸 **!kedy** → Pati dostlarımı ifşa ediyorum!\n"
+                "😹 **!j** → Biraz kahkaha iyidir! Miyav-miyav bir şaka geliyor\n"
+                "🙀 **!kedy** → Pati dostlarımı ifşa ediyorum!\n"
             ),
             inline=False
         )
@@ -41,7 +41,7 @@ class Commands(commands.Cog):
             name="🐾 Patisyonel Komutlar",
             value=(
                 "🌤 **!h** `<şehir>` → Hava nasıl, biliyor musun? Ben de bilmiyorum! Ama öğrenebiliriz...\n"
-                "💰 **!crypto** `<coin>` → Mama parası hesaplamam lazım!\n"
+                "💰 **!crypto** `<coin>` → Coin fiyatını gösteririm (Mama paası lazim!)\n"
             ),
             inline=False
         )
@@ -62,6 +62,13 @@ class Commands(commands.Cog):
 
         deleted = await ctx.channel.purge(limit=amount + 1)  # Komut mesajını da siler
         await ctx.send(f"🧹 {len(deleted) - 1} mesaj silindi!", delete_after=5)
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        """Yanlış komut kullanıldığında yardım mesajını atar"""
+        if isinstance(error, commands.CommandNotFound):
+            # Yanlış komut kullanıldığında yardım komutunu tetikler
+            await self.help(ctx)
 
 async def setup(bot):
     await bot.add_cog(Commands(bot))
