@@ -68,6 +68,7 @@ class SteamDB(commands.Cog):
             game_id = game_link["href"].split("/")[2]
             return game_id
         
+        # Eğer oyun ID'si bulunmazsa
         return None
 
 async def setup(bot):
