@@ -58,42 +58,47 @@ class PriceCog(commands.Cog):
             await self.send_log_message(f"Steam API bağlanırken hata: {e}")
             return
 
-        # Oyun için fiyat bilgisi al
-        price_url = f"https://api.steampowered.com/ISteamEconomy/GetAssetPrices/v1?appid={game_app_id}&key={self.steam_api_key}"
-        await self.send_log_message(f"Fiyat bilgisi almak için Steam API'ye istek atılıyor: {price_url}")
+        # Oyun için fiyat bilgisi almak yerine Steam Store üzerinden fiyat bilgisi al
+        store_url = f"https://store.steampowered.com/api/appdetails?appids={game_app_id}"
+
+        await self.send_log_message(f"Steam Store API'ye istek atılıyor: {store_url}")
 
         try:
-            price_response = requests.get(price_url)
-            if price_response.status_code != 200:
-                await ctx.send(f"Fiyat verileri alınırken bir hata oluştu: {price_response.status_code}")
-                await self.send_log_message(f"Fiyat verileri alınırken hata oluştu: {price_response.status_code}")
+            store_response = requests.get(store_url)
+            if store_response.status_code != 200:
+                await ctx.send(f"Fiyat verileri alınırken bir hata oluştu: {store_response.status_code}")
+                await self.send_log_message(f"Fiyat verileri alınırken hata oluştu: {store_response.status_code}")
                 return
 
-            price_data = price_response.json()
+            store_data = store_response.json()
 
-            # Fiyat bilgisi var mı kontrol et
-            if "price" not in price_data or "discount" not in price_data:
+            # API yanıtını logla
+            await self.send_log_message(f"Steam Store API yanıtı: {store_data}")
+
+            if not store_data.get(str(game_app_id), {}).get("success", False):
                 await ctx.send(f"{game_name} için fiyat bilgisi alınamadı.")
                 await self.send_log_message(f"{game_name} için fiyat bilgisi alınamadı.")
                 return
 
-            # En son indirim ve fiyat bilgilerini al
-            discount_price = price_data['discount']['final_price']
-            original_price = price_data['price']['original_price']
-            discount_start_time = price_data['discount']['start_time']
-            discount_end_time = price_data['discount']['end_time']
+            game_details = store_data[str(game_app_id)]["data"]
+            discount_price = game_details.get("price_overview", {}).get("final", None)
+            original_price = game_details.get("price_overview", {}).get("initial", None)
+            discount_start_time = game_details.get("price_overview", {}).get("discount_percent", 0) > 0
 
-            # Embed mesajı oluştur
-            embed = discord.Embed(title=f"{game_name} Fiyat Bilgisi", color=discord.Color.green())
-            embed.add_field(name="İndirim Fiyatı", value=f"${discount_price / 100:.2f}", inline=False)
-            embed.add_field(name="Orijinal Fiyat", value=f"${original_price / 100:.2f}", inline=False)
-            embed.add_field(name="İndirim Başlangıcı", value=f"<t:{discount_start_time}:F>", inline=False)
-            embed.add_field(name="İndirim Bitişi", value=f"<t:{discount_end_time}:F>", inline=False)
+            if discount_price and original_price:
+                # Embed mesajı oluştur
+                embed = discord.Embed(title=f"{game_name} Fiyat Bilgisi", color=discord.Color.green())
+                embed.add_field(name="İndirim Fiyatı", value=f"${discount_price / 100:.2f}", inline=False)
+                embed.add_field(name="Orijinal Fiyat", value=f"${original_price / 100:.2f}", inline=False)
+                embed.add_field(name="İndirim Durumu", value="İndirimli", inline=False)
 
-            await ctx.send(embed=embed)
-
-            # Fiyat bilgisini logla
-            await self.send_log_message(f"{game_name} Fiyatı: İndirimli Fiyat: ${discount_price / 100:.2f}, Orijinal Fiyat: ${original_price / 100:.2f}")
+                await ctx.send(embed=embed)
+                
+                # Fiyat bilgisini logla
+                await self.send_log_message(f"{game_name} Fiyatı: İndirimli Fiyat: ${discount_price / 100:.2f}, Orijinal Fiyat: ${original_price / 100:.2f}")
+            else:
+                await ctx.send(f"{game_name} için geçerli bir fiyat bilgisi bulunamadı.")
+                await self.send_log_message(f"{game_name} için geçerli bir fiyat bilgisi bulunamadı.")
 
         except Exception as e:
             await ctx.send(f"Fiyat verilerine bağlanırken bir hata oluştu: {e}")
