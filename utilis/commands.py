@@ -41,7 +41,7 @@ class Commands(commands.Cog):
             name="🐾 Patisyonel Komutlar",
             value=(
                 "🌤 **!h** `<şehir>` → Hava nasıl, biliyor musun? Ben de bilmiyorum! Ama öğrenebiliriz...\n"
-                "💰 **!crypto** `<coin>` → Coin fiyatını gösteririm (Mama paası lazim!)\n"
+                "💰 **!crypto** `<coin>` → Coin fiyatını gösteririm (Mama parası lazim!)\n"
             ),
             inline=False
         )
