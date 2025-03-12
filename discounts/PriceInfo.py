@@ -133,8 +133,7 @@ class ProfileCog(commands.Cog):
             if top_games:
                 embed.add_field(name="En Çok Oynadığı Oyunlar", value="\n".join([f"{game[0]} - {game[1]} saat" for game in top_games]), inline=False)
 
-            # Profil Linki
-            embed.add_field(name="Profil Linki", value=f"[Steam Profili](https://steamcommunity.com/profiles/{steam_id})", inline=False)
+            
 
             # Arka plan görselini ekleyebiliriz
             if background_image:
