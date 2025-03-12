@@ -33,19 +33,19 @@ async def log_error(bot, message):
     if log_channel:
         await log_channel.send(f"⚠ **Hata:** {formatted_message}")
 
-def get_crypto_price(coins):
-    """API'den kripto para fiyatlarını alır"""
-    coin_symbols = ",".join(coins)
-    url = f"{BASE_URL}/multi?fsyms={coin_symbols}&tsyms=USD,TRY"
+def get_crypto_price(coin):
+    """API'den tek bir coin'in fiyatını alır"""
+    url = f"{BASE_URL}?fsym={coin.upper()}&tsyms=USD,TRY"
     headers = {'Authorization': f'Apikey {API_KEY}'}
     response = requests.get(url, headers=headers)
     data = response.json()
 
-    prices = {}
-    for coin in coins:
-        if coin in data and 'USD' in data[coin] and 'TRY' in data[coin]:
-            prices[coin] = (data[coin]['USD'], data[coin]['TRY'])
-    return prices
+    # Log için API yanıtını döndürelim
+    print(f"API Yanıtı ({coin}): {data}")
+
+    if 'USD' in data and 'TRY' in data:
+        return data['USD'], data['TRY']
+    return None, None
 
 def format_price(price):
     """Sayısal değeri daha okunabilir hale getirir"""
@@ -68,9 +68,8 @@ class Crypto(commands.Cog):
         if now.hour == 0 and now.minute == 0:
             channel = self.bot.get_channel(PRICE_CHANNEL_ID)
             if channel:
-                prices = get_crypto_price(["BTC"])
-                if "BTC" in prices:
-                    price_usd, price_try = prices["BTC"]
+                price_usd, price_try = get_crypto_price("BTC")
+                if price_usd and price_try:
                     formatted_usd = format_price(price_usd)
                     formatted_try = format_price(price_try)
                     embed = discord.Embed(
@@ -96,9 +95,8 @@ class Crypto(commands.Cog):
         if coin:
             # Kullanıcı belirli bir coin istemiş
             coin = coin.upper()
-            prices = get_crypto_price([coin])
-            if coin in prices:
-                price_usd, price_try = prices[coin]
+            price_usd, price_try = get_crypto_price(coin)
+            if price_usd and price_try:
                 formatted_usd = format_price(price_usd)
                 formatted_try = format_price(price_try)
                 embed = discord.Embed(
@@ -113,20 +111,27 @@ class Crypto(commands.Cog):
 
         else:
             # Kullanıcı genel coin fiyatlarını istiyor
-            prices = get_crypto_price(TOP_COINS)
             embed = discord.Embed(
                 title="🐱 En Popüler 10 Coin Meow! 🐾",
                 description="İşte en ünlü 10 kripto paranın fiyatları!",
                 color=discord.Color.purple()
             )
-            for coin, (price_usd, price_try) in prices.items():
-                formatted_usd = format_price(price_usd)
-                formatted_try = format_price(price_try)
-                embed.add_field(
-                    name=f"🐾 {coin}",
-                    value=f"💲 **${formatted_usd}**\n🐟 **₺{formatted_try}**",
-                    inline=True
-                )
+            for coin in TOP_COINS:
+                price_usd, price_try = get_crypto_price(coin)
+                if price_usd and price_try:
+                    formatted_usd = format_price(price_usd)
+                    formatted_try = format_price(price_try)
+                    embed.add_field(
+                        name=f"🐾 {coin}",
+                        value=f"💲 **${formatted_usd}**\n🐟 **₺{formatted_try}**",
+                        inline=True
+                    )
+                else:
+                    embed.add_field(
+                        name=f"🐾 {coin}",
+                        value="❌ **Fiyat alınamadı.**",
+                        inline=True
+                    )
             embed.set_footer(text="Meow meow! Kripto dünyasında dikkatli ol!")
             await ctx.send(embed=embed)
 
