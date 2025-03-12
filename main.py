@@ -36,7 +36,7 @@ async def on_ready():
         await bot.load_extension('Joke')#json dosyasından şaka alır
         await bot.load_extension('GIF') #apiden kedi gif atıyor
         await bot.load_extension('Wallpaper')
-        await bot.load_extension('Cark')
+        await bot.load_extension('Wheel')
         #music
         await bot.load_extension('MusicPlayer')    # Müzik modülü
         await bot.load_extension('MusicCommands')   #p,l komutları hariç diğer komutlar
