@@ -18,7 +18,7 @@ LOG_CHANNEL_ID = 1339957995542544435  # Keep-alive mesajlarının atılacağı k
 PRICE_CHANNEL_ID = 1340760164617424938  # BTC fiyatının atılacağı kanal
 
 # En popüler 10 coin
-TOP_COINS = ["BTC", "ETH", "BNB", "XRP", "DOGE", "ADA", "SOL", "MATIC", "DOT", "LTC"]
+TOP_COINS = ["BTC", "ETH", "SOL","LTC", "RENDER", "ONDO", "FET", "GRT"]
 
 def log_message(message):
     """Log mesajını tarih, saat ile birlikte formatlayarak döndür"""
@@ -74,7 +74,7 @@ class Crypto(commands.Cog):
                     formatted_try = format_price(price_try)
                     embed = discord.Embed(
                         title="🐱 24 Saatlik BTC Fiyatı 🐾",
-                        description=f"💲 **${formatted_usd}** / 🐟 **₺{formatted_try}**\n\n*Bu fiyatlar sadece bilgi amaçlıdır. YTD!*",
+                        description=f"**${formatted_usd}** /**₺{formatted_try}**\n\n*Bu fiyatlar sadece bilgi amaçlıdır. YTD!*",
                         color=discord.Color.gold()
                     )
                     embed.set_footer(text="Meow meow, kripto dünyası seni bekliyor!")
@@ -100,11 +100,11 @@ class Crypto(commands.Cog):
                 formatted_usd = format_price(price_usd)
                 formatted_try = format_price(price_try)
                 embed = discord.Embed(
-                    title=f"🐾 {coin} Fiyatı Meow! 🐱",
-                    description=f"💲 **${formatted_usd}** / 🐟 **₺{formatted_try}**\n\n*Mır mır! Kriptolar hep değişir, dikkatli ol!*",
-                    color=discord.Color.blue()
+                    title=f"🐾 {coin} Fiyatı 🐱",
+                    description=f"**${formatted_usd}** /**₺{formatted_try}**\n\n*Bu fiyatlar patili borsa analizi içermez*",
+                    color=discord.Color.yellow()
                 )
-                embed.set_footer(text="Bu fiyatlar patili borsa analizi içermez.")
+                embed.set_footer(text="Mır mır! Kriptolar hep değişir, dikkatli ol! (YTD).")
                 await ctx.send(embed=embed)
             else:
                 await ctx.send(f"❌ **{coin} için fiyat verisi bulunamadı.** Mırmır, tekrar dene!")
@@ -112,9 +112,9 @@ class Crypto(commands.Cog):
         else:
             # Kullanıcı genel coin fiyatlarını istiyor
             embed = discord.Embed(
-                title="🐱 En Popüler 10 Coin Meow! 🐾",
-                description="İşte en ünlü 10 kripto paranın fiyatları!",
-                color=discord.Color.purple()
+                title="🐱 Bakalım mama parasını nerden çıkaracağız! 🐾",
+                description="Bu fiyatlar patili borsa analizi içermez!",
+                color=discord.Color.yellow()
             )
             for coin in TOP_COINS:
                 price_usd, price_try = get_crypto_price(coin)
@@ -123,7 +123,7 @@ class Crypto(commands.Cog):
                     formatted_try = format_price(price_try)
                     embed.add_field(
                         name=f"🐾 {coin}",
-                        value=f"💲 **${formatted_usd}**\n🐟 **₺{formatted_try}**",
+                        value=f"**${formatted_usd}**\n**₺{formatted_try}**",
                         inline=True
                     )
                 else:
@@ -132,7 +132,7 @@ class Crypto(commands.Cog):
                         value="❌ **Fiyat alınamadı.**",
                         inline=True
                     )
-            embed.set_footer(text="Meow meow! Kripto dünyasında dikkatli ol!")
+            embed.set_footer(text="Mır mır! Kriptolar hep değişir, dikkatli ol! (YTD).")
             await ctx.send(embed=embed)
 
 async def setup(bot):
