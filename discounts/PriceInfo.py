@@ -47,15 +47,51 @@ class ProfileCog(commands.Cog):
             return data['response']['player_level']
         return None
 
-    # Kullanıcının sahip olduğu oyun sayısını almak için fonksiyon
-    def get_owned_games_count(self, steam_id):
-        url = f"http://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key={STEAM_API_KEY}&steamid={steam_id}&include_appinfo=true&include_played_free_games=true"
+    # Kullanıcının sahip olduğu oyun sayısını almak
+    def get_owned_games(self, steam_id):
+        url = f"http://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key={STEAM_API_KEY}&steamid={steam_id}&include_appinfo=1"
         response = requests.get(url)
         data = response.json()
 
-        if 'response' in data and 'games' in data['response']:
+        if 'response' in data:
             return len(data['response']['games'])
         return 0
+
+    # Kullanıcının en çok oynadığı 3 oyunu ve süreyi almak
+    def get_top_played_games(self, steam_id):
+        url = f"http://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key={STEAM_API_KEY}&steamid={steam_id}&include_played_free_games=1&include_appinfo=1"
+        response = requests.get(url)
+        data = response.json()
+
+        if 'response' in data:
+            games = data['response']['games']
+            # En çok oynanan oyunları (en yüksek saatle) sıralıyoruz
+            games = sorted(games, key=lambda x: x.get('playtime_forever', 0), reverse=True)
+            top_games = games[:3]  # İlk 3 oyunu alıyoruz
+            return [(game['name'], game['playtime_forever'] // 60) for game in top_games]  # Saat cinsinden süre
+        return []
+
+    # Kullanıcının arka plan görselini almak
+    def get_profile_background(self, steam_id):
+        url = f"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key={STEAM_API_KEY}&steamids={steam_id}"
+        response = requests.get(url)
+        data = response.json()
+
+        if data['response']['players']:
+            player = data['response']['players'][0]
+            return player.get('profilebackground', None)
+        return None
+
+    # Kullanıcının hesap açılış tarihini almak (tahmin)
+    def get_account_creation_date(self, steam_id):
+        url = f"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key={STEAM_API_KEY}&steamids={steam_id}"
+        response = requests.get(url)
+        data = response.json()
+
+        if data['response']['players']:
+            player = data['response']['players'][0]
+            return player.get('timecreated', None)  # Hesap açılış zamanı
+        return None
 
     # Kullanıcı profil bilgilerini ve seviyesini çekmek için !profile komutu
     @commands.command()
@@ -74,23 +110,39 @@ class ProfileCog(commands.Cog):
             # Kullanıcının Steam seviyesini alıyoruz
             steam_level = self.get_steam_level(steam_id)
 
-            # Sahip olduğu oyun sayısını alıyoruz
-            owned_games_count = self.get_owned_games_count(steam_id)
+            # Kullanıcının sahip olduğu oyun sayısını alıyoruz
+            owned_games_count = self.get_owned_games(steam_id)
+
+            # Kullanıcının en çok oynadığı 3 oyunu alıyoruz
+            top_games = self.get_top_played_games(steam_id)
+
+            # Kullanıcının arka plan görselini alıyoruz
+            background_image = self.get_profile_background(steam_id)
+
+            # Hesap açılış tarihini alıyoruz
+            account_creation_date = self.get_account_creation_date(steam_id)
 
             # Embed mesajını oluşturuyoruz
             embed = discord.Embed(title=f"{user_info['personaname']}'in Steam Profili", color=discord.Color.blue())
             embed.set_thumbnail(url=user_info['avatarfull'])  # Profil fotoğrafını ekliyoruz
             embed.add_field(name="Kullanıcı Adı", value=user_info['personaname'], inline=False)
-
-            # Steam Level bilgisini ekliyoruz
-            if steam_level is not None:
-                embed.add_field(name="Steam Seviyesi", value=str(steam_level), inline=False)
-            
-            # Sahip olduğu oyun sayısını ekliyoruz
+            embed.add_field(name="Steam Seviyesi", value=str(steam_level), inline=False)
             embed.add_field(name="Sahip Olduğu Oyun Sayısı", value=str(owned_games_count), inline=False)
 
-            # Profil Linki bilgisini ekliyoruz
+            # En çok oynanan oyunlar
+            if top_games:
+                embed.add_field(name="En Çok Oynadığı Oyunlar", value="\n".join([f"{game[0]} - {game[1]} saat" for game in top_games]), inline=False)
+
+            # Profil Linki
             embed.add_field(name="Profil Linki", value=f"[Steam Profili](https://steamcommunity.com/profiles/{steam_id})", inline=False)
+
+            # Arka plan görselini ekleyebiliriz
+            if background_image:
+                embed.set_image(url=background_image)
+
+            # Hesap açılış tarihi
+            if account_creation_date:
+                embed.add_field(name="Hesap Açılış Tarihi", value=f"<t:{account_creation_date}:D>", inline=False)
 
             # Embed mesajını gönderiyoruz
             await ctx.send(embed=embed)
