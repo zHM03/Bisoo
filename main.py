@@ -31,6 +31,7 @@ async def on_ready():
         await bot.load_extension('EpicGames') #epicgamesten bedava oyun alma
         await bot.load_extension('EmbedCheck')#discount kanalındaki tekrarlanan mesajları siler
         await bot.load_extension('PriceInfo')
+        await bot.load_extension('SteamProfile')
         #fun
         await bot.load_extension('Joke')#json dosyasından şaka alır
         await bot.load_extension('GIF') #apiden kedi gif atıyor
