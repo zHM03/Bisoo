@@ -7,7 +7,7 @@ class GamePriceCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.api_key = "37d8ca093b6022f360d8e48ce69932797bc3c4e2"
-        self.url = "https://api.isthereanydeal.com/v01/deals/search/"  # ITAD API URL'si
+        self.url = "https://api.isthereanydeal.com/v01/deals/search/"  # IsThereAnyDeal API URL'si
 
         # Loglama konfigürasyonu
         logging.basicConfig(level=logging.DEBUG)
@@ -41,18 +41,24 @@ class GamePriceCog(commands.Cog):
                 self.logger.debug("API'den başarılı yanıt alındı.")
                 data = response.json()
 
-                if data["error"] == 0 and data["data"]["deals"]:
-                    best_deal = data["data"]["deals"][0]  # En iyi teklifi alıyoruz
-                    price = best_deal["price"]
-                    self.logger.info(f"{game_name} oyununun fiyatı: {price}")
-                    await ctx.send(f"{game_name} oyununun fiyatı: {price}")
-                    await self.log_to_channel(f"Fiyat sorgulama başarılı: {game_name} - {price}")
+                if data["error"] == 0:
+                    if data["data"]["deals"]:
+                        best_deal = data["data"]["deals"][0]  # En iyi teklifi alıyoruz
+                        price = best_deal["price"]
+                        self.logger.info(f"{game_name} oyununun fiyatı: {price}")
+                        await ctx.send(f"{game_name} oyununun fiyatı: {price}")
+                        await self.log_to_channel(f"Fiyat sorgulama başarılı: {game_name} - {price}")
+                    else:
+                        self.logger.warning(f"{game_name} oyunu için fiyat bulunamadı.")
+                        await ctx.send(f"{game_name} oyunu için fiyat bulunamadı.")
+                        await self.log_to_channel(f"{game_name} oyunu için fiyat bulunamadı.")
                 else:
-                    self.logger.warning(f"{game_name} oyunu için fiyat bulunamadı.")
-                    await ctx.send(f"{game_name} oyunu için fiyat bulunamadı.")
-                    await self.log_to_channel(f"{game_name} oyunu için fiyat bulunamadı.")
+                    self.logger.error(f"API hatası: {data.get('error_description', 'Bilinmeyen hata')}")
+                    await ctx.send(f"API hatası: {data.get('error_description', 'Bilinmeyen hata')}")
+                    await self.log_to_channel(f"API hatası: {data.get('error_description', 'Bilinmeyen hata')} - {game_name}")
+
             else:
-                self.logger.error(f"API hatası: {response.status_code}")
+                self.logger.error(f"HTTP hata: {response.status_code}")
                 await ctx.send(f"API hatası: {response.status_code}")
                 await self.log_to_channel(f"API hatası: {response.status_code} - {game_name}")
 
