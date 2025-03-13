@@ -7,7 +7,7 @@ class GamePriceCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.api_key = "37d8ca093b6022f360d8e48ce69932797bc3c4e2"
-        self.url = "https://api.example.com/game-price"  # API URL'sini burada değiştirebilirsiniz
+        self.url = "https://api.isthereanydeal.com/v01/deals/search/"  # ITAD API URL'si
 
         # Loglama konfigürasyonu
         logging.basicConfig(level=logging.DEBUG)
@@ -27,10 +27,10 @@ class GamePriceCog(commands.Cog):
         """Oyun adı ile fiyat sorgulama"""
 
         self.logger.info(f"{ctx.author} tarafından '{game_name}' oyununun fiyatı sorgulandı.")
-        
+
         params = {
-            'api_key': self.api_key,
-            'game_name': game_name
+            'key': self.api_key,
+            'title': game_name
         }
 
         try:
@@ -40,9 +40,10 @@ class GamePriceCog(commands.Cog):
             if response.status_code == 200:
                 self.logger.debug("API'den başarılı yanıt alındı.")
                 data = response.json()
-                
-                if 'price' in data:
-                    price = data['price']
+
+                if data["error"] == 0 and data["data"]["deals"]:
+                    best_deal = data["data"]["deals"][0]  # En iyi teklifi alıyoruz
+                    price = best_deal["price"]
                     self.logger.info(f"{game_name} oyununun fiyatı: {price}")
                     await ctx.send(f"{game_name} oyununun fiyatı: {price}")
                     await self.log_to_channel(f"Fiyat sorgulama başarılı: {game_name} - {price}")
