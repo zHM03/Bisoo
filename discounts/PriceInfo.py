@@ -1,75 +1,53 @@
 import discord
 from discord.ext import commands
 import requests
-from bs4 import BeautifulSoup
 
-class SteamDB(commands.Cog):
+class ITADCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.base_url = "https://steamdb.info/app/"
 
-    @commands.command(name="price")
-    async def fetch_price(self, ctx, *, game_name: str):
-        """SteamDB'den oyunun fiyat bilgisini ve indirim geçmişini alır."""
-        game_id = await self.get_steam_game_id(game_name)
-        if not game_id:
-            return await ctx.send(f"Oyun '{game_name}' SteamDB üzerinde bulunamadı.")
+    @commands.command(name='deals')
+    async def get_deals(self, ctx):
+        """ITAD API'sinden en iyi teklifleri getirir."""
+        api_key = "37d8ca093b6022f360d8e48ce69932797bc3c4e2"
+        url = "https://api.isthereanydeal.com/v01/deals/list/"
+        params = {
+            "key": api_key,
+            "sort": "price",  # Fiyat sıralaması
+            "limit": 5        # İlk 5 teklif
+        }
 
-        url = f"{self.base_url}{game_id}/"
-        response = requests.get(url)
-        if response.status_code != 200:
-            return await ctx.send("SteamDB verisi alınamadı. Lütfen daha sonra tekrar deneyin.")
+        # API isteği gönder
+        response = requests.get(url, params=params)
 
-        soup = BeautifulSoup(response.text, "html.parser")
+        # Log kanal ID'si
+        log_channel_id = 1339957995542544435
+        log_channel = self.bot.get_channel(log_channel_id)
 
-        # Güncel fiyat bilgisi
-        current_price_tag = soup.find("div", class_="price")
-        if current_price_tag:
-            current_price = current_price_tag.get_text(strip=True)
+        # Yanıt kontrolü
+        if response.status_code == 200:
+            data = response.json()
+            deals = data.get('data', {}).get('list', [])
+            if deals:
+                message = "İşte en iyi 5 teklif:\n"
+                for deal in deals:
+                    name = deal.get('title', 'Bilinmiyor')
+                    price = deal.get('price', 'Bilinmiyor')
+                    message += f"{name}: {price}\n"
+                await ctx.send(message)
+                # Loglara yazma
+                if log_channel:
+                    await log_channel.send(f"API başarıyla çalıştı ve teklifler alındı:\n{message}")
+            else:
+                await ctx.send("Teklif bulunamadı.")
+                # Loglara yazma
+                if log_channel:
+                    await log_channel.send("Teklif bulunamadı.")
         else:
-            current_price = "Bilinmiyor"
-
-        # İndirim geçmişi bilgisi
-        discount_history_tag = soup.find("table", class_="table table-striped")
-        discount_history = "İndirim geçmişi bulunamadı."
-
-        if discount_history_tag:
-            rows = discount_history_tag.find_all("tr")
-            # İndirimlerin bulunduğu tabloyu işleyelim
-            for row in rows:
-                cols = row.find_all("td")
-                if len(cols) >= 3:
-                    discount_history = f"Son indirim: {cols[0].get_text(strip=True)}, Fiyat: {cols[1].get_text(strip=True)}"
-                    break  # İlk indirim bilgisi yeterli
-
-        embed = discord.Embed(
-            title=f"{game_name} - Fiyat ve İndirim Bilgisi",
-            url=f"https://steamdb.info/app/{game_id}/",
-            color=discord.Color.blue()
-        )
-        embed.add_field(name="Güncel Fiyat", value=current_price, inline=False)
-        embed.add_field(name="Son İndirim Geçmişi", value=discount_history, inline=False)
-
-        await ctx.send(embed=embed)
-
-    async def get_steam_game_id(self, game_name):
-        """Oyun adından SteamDB ID'sini alır"""
-        search_url = "https://steamdb.info/search/"
-        params = {"q": game_name}
-        
-        response = requests.get(search_url, params=params)
-        if response.status_code != 200:
-            return None
-        
-        soup = BeautifulSoup(response.text, "html.parser")
-        game_link = soup.find("a", class_="app")
-        
-        if game_link:
-            game_id = game_link["href"].split("/")[2]
-            return game_id
-        
-        # Eğer oyun ID'si bulunmazsa
-        return None
+            await ctx.send(f"API isteği başarısız. Durum kodu: {response.status_code}")
+            # Loglara yazma
+            if log_channel:
+                await log_channel.send(f"API isteği başarısız. Durum kodu: {response.status_code}")
 
 async def setup(bot):
-    await bot.add_cog(SteamDB(bot))
+    await bot.add_cog(ITADCog(bot))
