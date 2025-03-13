@@ -13,7 +13,7 @@ class GamePriceCog(commands.Cog):
         # Loglama konfigürasyonu
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger(__name__)
-        self.log_channel_id = 1339957995542544435  # Logların gönderileceği kanal ID'si
+        self.log_channel_id = 1339957995542544435  # Logların göhnderileceği kanal ID'si
 
     async def log_to_channel(self, message):
         """Log mesajlarını belirlenen kanala gönderir."""
