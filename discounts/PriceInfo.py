@@ -21,8 +21,14 @@ class ITADCog(commands.Cog):
         response = requests.get(url, params=params)
 
         # Log kanal ID'si
-        log_channel_id = 1339957995542544435
+        log_channel_id = 1273378150901874718
         log_channel = self.bot.get_channel(log_channel_id)
+
+        # Kanal var mı kontrol et
+        if log_channel is None:
+            print("Log kanalı bulunamadı!")
+            await ctx.send("Log kanalı bulunamadı.")
+            return
 
         # Yanıt kontrolü
         if response.status_code == 200:
@@ -36,18 +42,15 @@ class ITADCog(commands.Cog):
                     message += f"{name}: {price}\n"
                 await ctx.send(message)
                 # Loglara yazma
-                if log_channel:
-                    await log_channel.send(f"API başarıyla çalıştı ve teklifler alındı:\n{message}")
+                await log_channel.send(f"API başarıyla çalıştı ve teklifler alındı:\n{message}")
             else:
                 await ctx.send("Teklif bulunamadı.")
                 # Loglara yazma
-                if log_channel:
-                    await log_channel.send("Teklif bulunamadı.")
+                await log_channel.send("Teklif bulunamadı.")
         else:
             await ctx.send(f"API isteği başarısız. Durum kodu: {response.status_code}")
             # Loglara yazma
-            if log_channel:
-                await log_channel.send(f"API isteği başarısız. Durum kodu: {response.status_code}")
+            await log_channel.send(f"API isteği başarısız. Durum kodu: {response.status_code}")
 
 async def setup(bot):
     await bot.add_cog(ITADCog(bot))
