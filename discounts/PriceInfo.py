@@ -61,5 +61,5 @@ class GamePriceCog(commands.Cog):
             await self.log_to_channel(f"API isteği sırasında hata oluştu: {e}")
 
 # Cog'u botumuza ekliyoruz
-def setup(bot):
-    bot.add_cog(GamePriceCog(bot))
+async def setup(bot):
+    await bot.add_cog(GamePriceCog(bot))
