@@ -59,7 +59,8 @@ class GamePriceCog(commands.Cog):
 
             else:
                 self.logger.error(f"HTTP hata: {response.status_code}")
-                await ctx.send(f"API hatası: {response.status_code}")
+                self.logger.error(f"API yanıtı: {response.text}")
+                await ctx.send(f"API hatası: {response.status_code}. Detaylar: {response.text}")
                 await self.log_to_channel(f"API hatası: {response.status_code} - {game_name}")
 
         except requests.exceptions.RequestException as e:
