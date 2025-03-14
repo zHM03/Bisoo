@@ -1,10 +1,12 @@
 import discord
 from discord.ext import commands
 import aiohttp
+from googletrans import Translator
 
 class SteamGame(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.translator = Translator()
 
     async def get_game_price(self, game_name):
         """Steam API'den oyunun Türkiye fiyatını, kapak fotoğrafını ve detaylarını çeker"""
@@ -35,8 +37,10 @@ class SteamGame(commands.Cog):
                     price_data = await price_response.json()
                     game_data = price_data.get(str(game_id), {}).get("data", {})
 
-                    # Oyun açıklaması ve türünü al
+                    # Oyun açıklamasını al ve Türkçeye çevir
                     description = game_data.get("short_description", "Açıklama bulunamadı.")
+                    description_translated = self.translator.translate(description, src='en', dest='tr').text
+
                     categories = game_data.get("categories", [])
                     multiplayer = "Coop" if any(cat["description"].lower() in ["multiplayer", "co-op"] for cat in categories) else "Tek oyunculu"
 
@@ -51,14 +55,14 @@ class SteamGame(commands.Cog):
                         else:
                             discount_message = f"Fiyat: **{final_price} TL**"
 
-                        return game_name, discount_message, game_image, multiplayer, description, discount_percent
+                        return game_name, discount_message, game_image, multiplayer, description_translated, discount_percent
                     else:
-                        return game_name, "Bu oyun şu anda satılmıyor veya fiyat bilgisi yok.", game_image, multiplayer, description, None
+                        return game_name, "Bu oyun şu anda satılmıyor veya fiyat bilgisi yok.", game_image, multiplayer, description_translated, None
 
     @commands.command()
     async def game(self, ctx, *, game_name: str):
         """Belirtilen oyunun Steam fiyatını ve detaylarını embed mesaj olarak gösterir"""
-        await ctx.send("🐱 **Kediler araştırıyor...** ⏳")
+        await ctx.send("🐱 Kediler araştırıyor... ⏳")
 
         game_name, price_info, game_image, multiplayer, description, discount_percent = await self.get_game_price(game_name)
 
