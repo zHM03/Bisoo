@@ -8,20 +8,6 @@ class SteamGame(commands.Cog):
         self.bot = bot
         self.translator = Translator()
 
-    async def get_exchange_rate(self):
-        """Türkiye Merkez Bankası'ndan USD/TRY kuru çeker"""
-        url = "https://api.exchangerate-api.com/v4/latest/USD"  # Alternatif döviz kuru API'si
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if response.status != 200:
-                    return None
-                data = await response.json()
-                try:
-                    exchange_rate = data['rates']['TRY']  # USD/TRY kuru
-                    return exchange_rate
-                except KeyError:
-                    return None
-
     async def get_game_price(self, game_name):
         """Steam API'den oyunun Türkiye fiyatını, kapak fotoğrafını ve detaylarını çeker"""
         url = f"https://store.steampowered.com/api/storesearch/?term={game_name}&cc=tr&l=tr"
@@ -63,54 +49,61 @@ class SteamGame(commands.Cog):
                         initial_price = game_data["price_overview"].get("initial_formatted", "Bilinmiyor")
                         discount_percent = game_data["price_overview"].get("discount_percent", 0)
 
-                        # Döviz kuru bilgisi alalım
-                        exchange_rate = await self.get_exchange_rate()
-                        if exchange_rate:
-                            # Fiyatları TL'ye çevirelim (USD'nin final fiyatını TL'ye çevirelim)
-                            final_price_usd = float(final_price.replace(" USD", ""))  # Fiyatı sayıya dönüştür
-                            final_price_try = final_price_usd * exchange_rate
-                            final_price_try_formatted = f"{final_price_try:,.2f} TL"
-                        else:
-                            final_price_try_formatted = "Fiyat bilgisi alınamadı"
+                        # Türkiye Merkez Bankası API'si ile döviz kuru dönüşümü
+                        async with session.get("https://api.tcmb.gov.tr/api/forex/forex-rates?date=2023-12-03") as forex_response:
+                            if forex_response.status == 200:
+                                forex_data = await forex_response.json()
+                                try:
+                                    usd_to_try = forex_data['USD']['ForexBuying']
+                                    # Fiyatları TL'ye çevir
+                                    final_price_in_try = float(final_price.replace("USD", "").strip()) * usd_to_try
+                                    final_price = f"₺ {final_price_in_try:.2f}"
+
+                                    if initial_price != "Bilinmiyor":
+                                        initial_price_in_try = float(initial_price.replace("USD", "").strip()) * usd_to_try
+                                        initial_price = f"₺ {initial_price_in_try:.2f}"
+
+                                except KeyError:
+                                    return game_name, "Döviz kuru bilgisi alınamadı.", game_image, multiplayer, description_translated, None
 
                         # İndirimli fiyat varsa
                         if discount_percent > 0:
-                            discount_message = f"İndirimli Fiyat: **{final_price_try_formatted}**\nOrijinal Fiyat: **{initial_price}**\nİndirim: %{discount_percent}"
+                            discount_message = f"İndirimli Fiyat: **{final_price} **\nOrijinal Fiyat: **{initial_price} **\nİndirim: %{discount_percent}"
                         else:
-                            discount_message = f"Fiyat: **{final_price_try_formatted}**"
+                            discount_message = f"Fiyat: **{final_price}**"
 
                         return game_name, discount_message, game_image, multiplayer, description_translated, discount_percent
                     else:
                         return game_name, "Bu oyun şu anda satılmıyor veya fiyat bilgisi yok.", game_image, multiplayer, description_translated, None
 
-    @commands.command()
-    async def game(self, ctx, *, game_name: str):
-        """Belirtilen oyunun Steam fiyatını ve detaylarını embed mesaj olarak gösterir"""
-        await ctx.send("🐱 Kediler araştırıyor... ⏳")
+@commands.command()
+async def game(self, ctx, *, game_name: str):
+    """Belirtilen oyunun Steam fiyatını ve detaylarını embed mesaj olarak gösterir"""
+    await ctx.send("🐱 Kediler araştırıyor... ⏳")
 
-        game_name, price_info, game_image, multiplayer, description, discount_percent = await self.get_game_price(game_name)
+    game_name, price_info, game_image, multiplayer, description, discount_percent = await self.get_game_price(game_name)
 
-        if game_name is None:
-            await ctx.send(price_info)
-            return
+    if game_name is None:
+        await ctx.send(price_info)
+        return
 
-        # Embed mesaj oluştur
-        embed = discord.Embed(
-            title=f"🎮 {game_name}",
-            description=f"**{price_info}**\n\n🐾 *Kediler bu oyunu oynar mı bilmiyoruz ama fiyatı bu!* 🐾",
-            color=discord.Color.orange(),
-        )
-        embed.set_thumbnail(url=game_image)
+    # Embed mesaj oluştur
+    embed = discord.Embed(
+        title=f"🎮 {game_name}",
+        description=f"**{price_info}**\n\n🐾 *Kediler bu oyunu oynar mı bilmiyoruz ama fiyatı bu!* 🐾",
+        color=discord.Color.orange(),
+    )
+    embed.set_thumbnail(url=game_image)
 
-        # Oyun açıklamasını ve türünü ekle
-        embed.add_field(name="Açıklama", value=description, inline=False)
-        embed.add_field(name="Tür", value=multiplayer, inline=False)
+    # Oyun açıklamasını ve türünü ekle
+    embed.add_field(name="Açıklama", value=description, inline=False)
+    embed.add_field(name="Tür", value=multiplayer, inline=False)
 
-        # Eğer indirim varsa, footer'ı buna göre değiştirebiliriz.
-        if discount_percent > 0:
-            embed.set_footer(text="🔥 İndirimli fiyatlar, kaçırmayın! 🏷️")
+    # Eğer indirim varsa, footer'ı buna göre değiştirebiliriz.
+    if discount_percent > 0:
+        embed.set_footer(text="🔥 İndirimli fiyatlar, kaçırmayın! 🏷️")
 
-        await ctx.send(embed=embed)
+    await ctx.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(SteamGame(bot))
