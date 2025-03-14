@@ -31,11 +31,17 @@ class SteamGame(commands.Cog):
 
                 data = await response.json()
 
+                # Debugging: RAWG yanıtını kontrol et
+                print("RAWG API Yanıtı:", data)
+
                 if not data["results"]:
                     return None, "Oyun bulunamadı.", None, None, None, None
 
                 game = data["results"][0]  # İlk sonucu al
                 game_description = game.get("description_raw", "Açıklama bulunamadı.")  # Oyun açıklaması
+
+                # Debugging: Açıklamayı kontrol et
+                print("Oyun Açıklaması:", game_description)
 
                 # Steam API'den fiyat ve diğer bilgileri almak için
                 steam_url = f"https://store.steampowered.com/api/storesearch/?term={game_name}&cc=us&l=us"
