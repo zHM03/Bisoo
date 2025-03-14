@@ -25,8 +25,10 @@ class SteamGame(commands.Cog):
                 game_name = game["name"]  # Oyunun tam adı
                 game_url = f"https://store.steampowered.com/app/{game_id}"
                 game_image = game["tiny_image"]  # Oyunun kapak fotoğrafı
-                game_type = game["type"]  # Oyun türü (örneğin: "Game", "DLC" vs)
                 
+                # Oyun türü
+                game_type = game.get("type", "Bilinmeyen tür")
+
                 # Oyun açıklaması (kısa açıklama)
                 game_description = game.get("short_description", "Açıklama mevcut değil.")
 
