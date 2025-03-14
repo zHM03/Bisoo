@@ -1,78 +1,65 @@
 import discord
 from discord.ext import commands
 import aiohttp
-import xml.etree.ElementTree as ET
-
-TCMB_API_URL = "https://www.tcmb.gov.tr/kurlar/today.xml"  # Günlük döviz kuru XML verisi
 
 class SteamGame(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def get_usd_to_try(self):
-        """TCMB API'den USD → TL kurunu çeker"""
-        async with aiohttp.ClientSession() as session:
-            async with session.get(TCMB_API_URL) as response:
-                if response.status != 200:
-                    return None  # API'ye ulaşılamadı
-
-                xml_data = await response.text()
-                root = ET.fromstring(xml_data)
-
-                # USD'nin alış kurunu çekiyoruz
-                for currency in root.findall("Currency"):
-                    if currency.get("CurrencyCode") == "USD":
-                        usd_to_try = currency.find("ForexBuying").text
-                        return float(usd_to_try)  # USD → TL dönüşüm oranı
-
-                return None  # USD kuru bulunamadı
-
     async def get_game_price(self, game_name):
-        """Steam API'den oyunun fiyatını çeker ve TL'ye çevirir"""
+        """Steam API'den oyunun Türkiye fiyatını, kapak fotoğrafını ve detaylarını çeker"""
         url = f"https://store.steampowered.com/api/storesearch/?term={game_name}&cc=tr&l=tr"
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 if response.status != 200:
-                    return None, "Steam API'ye ulaşılamadı.", None
+                    return None, "Steam API'ye ulaşılamadı.", None, None, None, None
 
                 data = await response.json()
 
                 if not data["items"]:
-                    return None, "Oyun bulunamadı.", None
+                    return None, "Oyun bulunamadı.", None, None, None, None
 
                 game = data["items"][0]  # İlk sonucu al
                 game_id = game["id"]  # Steam oyun ID'si
                 game_name = game["name"]  # Oyunun tam adı
                 game_url = f"https://store.steampowered.com/app/{game_id}"
                 game_image = game["tiny_image"]  # Oyunun kapak fotoğrafı
+                game_type = game["type"]  # Oyun türü (örneğin: "Game", "DLC" vs)
+                
+                # Oyun açıklaması (kısa açıklama)
+                game_description = game.get("short_description", "Açıklama mevcut değil.")
 
                 # Oyun fiyatını almak için yeni istek at
                 price_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=tr&l=tr"
                 async with session.get(price_url) as price_response:
                     if price_response.status != 200:
-                        return game_name, "Fiyat bilgisi alınamadı.", game_image
+                        return game_name, "Fiyat bilgisi alınamadı.", game_image, game_type, game_description, None
 
                     price_data = await price_response.json()
                     game_data = price_data.get(str(game_id), {}).get("data", {})
 
                     if "price_overview" in game_data:
-                        price_usd = float(game_data["price_overview"]["final"]) / 100  # Steam fiyatları cent cinsinden döndürüyor
-                        usd_to_try = await self.get_usd_to_try()  # TCMB'den döviz kuru al
-                        if usd_to_try is None:
-                            return game_name, f"Fiyatı: **{price_usd} USD** (Döviz bilgisi alınamadı)", game_image
+                        final_price = game_data["price_overview"]["final_formatted"]
+                        initial_price = game_data["price_overview"].get("initial_formatted", "Bilinmiyor")
+                        discount_percent = game_data["price_overview"].get("discount_percent", 0)
 
-                        price_try = round(price_usd * usd_to_try, 2)  # TL'ye çevir ve 2 basamaklı göster
-                        return game_name, f"Fiyatı: **{price_try} TL** (~{price_usd} USD)", game_image
+                        # İndirimli fiyat varsa
+                        if discount_percent > 0:
+                            discount_message = f"İndirimli Fiyat: **{final_price} TL**\nOrijinal Fiyat: **{initial_price} TL**\nİndirim: %{discount_percent}"
+                        else:
+                            discount_message = f"Fiyat: **{final_price} TL**"
+
+                        return game_name, discount_message, game_image, game_type, game_description, discount_percent
                     else:
-                        return game_name, "Bu oyun şu anda satılmıyor veya fiyat bilgisi yok.", game_image
+                        return game_name, "Bu oyun şu anda satılmıyor veya fiyat bilgisi yok.", game_image, game_type, game_description, None
 
     @commands.command()
     async def game(self, ctx, *, game_name: str):
-        """Belirtilen oyunun Steam fiyatını TL'ye çevirerek embed mesaj olarak gösterir"""
+        """Belirtilen oyunun Steam fiyatını ve detaylarını embed mesaj olarak gösterir"""
         await ctx.send("🐱 **Kediler araştırıyor...** ⏳")
 
-        game_name, price_info, game_image = await self.get_game_price(game_name)
+        game_name, price_info, game_image, game_type, game_description, discount_percent = await self.get_game_price(game_name)
 
         if game_name is None:
             await ctx.send(price_info)
@@ -85,7 +72,13 @@ class SteamGame(commands.Cog):
             color=discord.Color.orange(),
         )
         embed.set_thumbnail(url=game_image)
+        embed.add_field(name="Tür", value=game_type, inline=True)
+        embed.add_field(name="Açıklama", value=game_description, inline=False)
         embed.set_footer(text="😺 Oyun fiyatlarını kontrol etmek kediler için de önemli!")
+
+        # Eğer indirim varsa, footer'ı buna göre değiştirebiliriz.
+        if discount_percent > 0:
+            embed.set_footer(text="🔥 İndirimli fiyatlar, kaçırmayın! 🏷️")
 
         await ctx.send(embed=embed)
 
