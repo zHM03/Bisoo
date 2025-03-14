@@ -43,6 +43,13 @@ class SteamGame(commands.Cog):
                 if not game_description:
                     game_description = "Açıklama mevcut değil."  # Eğer açıklama hala yoksa alternatif açıklama
 
+                # Logları belirtilen kanala gönder
+                log_channel = self.bot.get_channel(1339957995542544435)
+                if log_channel:
+                    await log_channel.send(f"**Oyun Adı:** {game_name}\n"
+                                           f"**Açıklama:** {game_description}\n"
+                                           f"**İlgili URL:** {game_url}")
+
                 # Oyun fiyatını almak için yeni istek at
                 price_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=tr&l=us"
                 async with session.get(price_url) as price_response:
