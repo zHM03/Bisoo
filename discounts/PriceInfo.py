@@ -83,7 +83,7 @@ class SteamGame(commands.Cog):
     @commands.command()
     async def game(self, ctx, *, game_name: str):
         """Oyunun Steam fiyatı ve detaylarını embed içinde gösterir."""
-        await ctx.send("🐱 Kediler araştırıyor... ⏳")
+        await ctx.send("Araştırıyorummm... ⏳")
 
         name, price, image, game_type, description = await self.get_game_info(game_name)
 
