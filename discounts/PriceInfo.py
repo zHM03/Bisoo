@@ -46,5 +46,5 @@ class SteamGame(commands.Cog):
         price_info = await self.get_game_price(game_name)
         await ctx.send(price_info)
 
-def setup(bot):
-    bot.add_cog(SteamGame(bot))
+async def setup(bot):
+    await bot.add_cog(SteamGame(bot))
