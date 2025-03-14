@@ -13,30 +13,24 @@ class SteamGame(commands.Cog):
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 if response.status != 200:
-                    return None, "Steam API'ye ulaşılamadı.", None, None, None, None
+                    return None, "Steam API'ye ulaşılamadı.", None, None
 
                 data = await response.json()
 
                 if not data["items"]:
-                    return None, "Oyun bulunamadı.", None, None, None, None
+                    return None, "Oyun bulunamadı.", None, None
 
                 game = data["items"][0]  # İlk sonucu al
                 game_id = game["id"]  # Steam oyun ID'si
                 game_name = game["name"]  # Oyunun tam adı
                 game_url = f"https://store.steampowered.com/app/{game_id}"
                 game_image = game["tiny_image"]  # Oyunun kapak fotoğrafı
-                
-                # Oyun türü
-                game_type = game.get("type", "Bilinmeyen tür")
-
-                # Oyun açıklaması (kısa açıklama)
-                game_description = game.get("short_description", "Açıklama mevcut değil.")
 
                 # Oyun fiyatını almak için yeni istek at
                 price_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=tr&l=tr"
                 async with session.get(price_url) as price_response:
                     if price_response.status != 200:
-                        return game_name, "Fiyat bilgisi alınamadı.", game_image, game_type, game_description, None
+                        return game_name, "Fiyat bilgisi alınamadı.", game_image, None
 
                     price_data = await price_response.json()
                     game_data = price_data.get(str(game_id), {}).get("data", {})
@@ -52,16 +46,16 @@ class SteamGame(commands.Cog):
                         else:
                             discount_message = f"Fiyat: **{final_price} TL**"
 
-                        return game_name, discount_message, game_image, game_type, game_description, discount_percent
+                        return game_name, discount_message, game_image, discount_percent
                     else:
-                        return game_name, "Bu oyun şu anda satılmıyor veya fiyat bilgisi yok.", game_image, game_type, game_description, None
+                        return game_name, "Bu oyun şu anda satılmıyor veya fiyat bilgisi yok.", game_image, None
 
     @commands.command()
     async def game(self, ctx, *, game_name: str):
         """Belirtilen oyunun Steam fiyatını ve detaylarını embed mesaj olarak gösterir"""
         await ctx.send("🐱 **Kediler araştırıyor...** ⏳")
 
-        game_name, price_info, game_image, game_type, game_description, discount_percent = await self.get_game_price(game_name)
+        game_name, price_info, game_image, discount_percent = await self.get_game_price(game_name)
 
         if game_name is None:
             await ctx.send(price_info)
@@ -74,9 +68,6 @@ class SteamGame(commands.Cog):
             color=discord.Color.orange(),
         )
         embed.set_thumbnail(url=game_image)
-        embed.add_field(name="Tür", value=game_type, inline=True)
-        embed.add_field(name="Açıklama", value=game_description, inline=False)
-        embed.set_footer(text="😺 Oyun fiyatlarını kontrol etmek kediler için de önemli!")
 
         # Eğer indirim varsa, footer'ı buna göre değiştirebiliriz.
         if discount_percent > 0:
