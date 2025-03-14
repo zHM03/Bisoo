@@ -72,7 +72,7 @@ class SteamGame(commands.Cog):
 
                             if discount_percent > 0:
                                 price = f"💥 Şu an indirimde! **{formatted_usd_price} (~{price_in_try} TL)**\n" \
-                                        f"~~Önceki fiyat: {formatted_original_price} (~{original_price_in_try} TL)~~"
+                                        f"Önceki fiyat: {formatted_original_price} (~{original_price_in_try} TL)"
                         else:
                             price = formatted_usd_price
                     else:
