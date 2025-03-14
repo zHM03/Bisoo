@@ -48,7 +48,7 @@ class SteamGame(commands.Cog):
                 game_image = game["tiny_image"]  # Oyunun kapak fotoğrafı
 
                 # Oyun fiyatını almak için yeni istek at
-                price_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=us&l=en"
+                price_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=tr&l=tr"
                 async with session.get(price_url) as price_response:
                     if price_response.status != 200:
                         return game_name, "Fiyat bilgisi alınamadı.", game_image
