@@ -5,6 +5,7 @@ import aiohttp
 class SteamGame(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.rawg_api_key = "2470cea5201442a5977235ee33b3cc03"  # RAWG API anahtarı
 
     async def get_usd_to_try_rate(self):
         """Alternatif döviz kuru API'sinden USD/TRY kurunu alır"""
@@ -19,61 +20,61 @@ class SteamGame(commands.Cog):
                 return data["rates"].get("TRY")  # Türkiye kuru
 
     async def get_game_price(self, game_name):
-        """Steam API'den oyunun ABD dolar fiyatını ve kapak fotoğrafını çeker"""
-        url = f"https://store.steampowered.com/api/storesearch/?term={game_name}&cc=us&l=us"
+        """RAWG API'den açıklamayı, Steam API'den ise fiyat ve diğer bilgileri çeker"""
+        # RAWG API'den oyun açıklamasını almak için istek
+        rawg_url = f"https://api.rawg.io/api/games?key={self.rawg_api_key}&page_size=1&search={game_name}"
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
+            async with session.get(rawg_url) as response:
                 if response.status != 200:
-                    return None, "Steam API'ye ulaşılamadı.", None, None, None, None
+                    return None, "RAWG API'ye ulaşılamadı.", None, None, None, None
 
                 data = await response.json()
 
-                if not data["items"]:
+                if not data["results"]:
                     return None, "Oyun bulunamadı.", None, None, None, None
 
-                game = data["items"][0]  # İlk sonucu al
-                game_id = game["id"]  # Steam oyun ID'si
-                game_name = game["name"]  # Oyunun tam adı
-                game_url = f"https://store.steampowered.com/app/{game_id}"
-                game_image = game["tiny_image"]  # Oyunun kapak fotoğrafı
-                game_description = game.get("short_description", "Açıklama bulunamadı.")  # Oyun açıklaması
-                
-                if not game_description:
-                    game_description = game.get("detailed_description", "Detaylı açıklama bulunamadı.")  # Detaylı açıklama kontrolü
-                if not game_description:
-                    game_description = "Açıklama mevcut değil."  # Eğer açıklama hala yoksa alternatif açıklama
+                game = data["results"][0]  # İlk sonucu al
+                game_description = game.get("description_raw", "Açıklama bulunamadı.")  # Oyun açıklaması
 
-                # Logları belirtilen kanala gönder
-                log_channel = self.bot.get_channel(1339957995542544435)
-                if log_channel:
-                    await log_channel.send(f"**Oyun Adı:** {game_name}\n"
-                                           f"**Açıklama:** {game_description}\n"
-                                           f"**İlgili URL:** {game_url}\n"
-                                           f"**Steam API Yanıtı:** {data}")
-
-                # Oyun fiyatını almak için yeni istek at
-                price_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=tr&l=us"
-                async with session.get(price_url) as price_response:
+                # Steam API'den fiyat ve diğer bilgileri almak için
+                steam_url = f"https://store.steampowered.com/api/storesearch/?term={game_name}&cc=us&l=us"
+                async with session.get(steam_url) as price_response:
                     if price_response.status != 200:
-                        return game_name, "Fiyat bilgisi alınamadı.", game_image, game_url, game_description, None
+                        return game_name, "Fiyat bilgisi alınamadı.", None, None, game_description, None
 
                     price_data = await price_response.json()
-                    game_data = price_data.get(str(game_id), {}).get("data", {})
+                    if not price_data["items"]:
+                        return game_name, "Fiyat bilgisi bulunamadı.", None, None, game_description, None
 
-                    if "price_overview" in game_data:
-                        price_usd = float(game_data["price_overview"]["final"]) / 100  # Steam fiyatları cent olarak döndürüyor
-                        # Oyun türünü almak için
-                        genres = [genre["description"] for genre in game_data.get("genres", [])]
-                        genres_info = ', '.join(genres) if genres else "Bilinmiyor"
+                    game_data = price_data["items"][0]  # İlk sonucu al
+                    game_id = game_data["id"]  # Steam oyun ID'si
+                    game_name = game_data["name"]  # Oyunun tam adı
+                    game_url = f"https://store.steampowered.com/app/{game_id}"
+                    game_image = game_data["tiny_image"]  # Oyunun kapak fotoğrafı
 
-                        return game_name, price_usd, game_image, game_url, game_description, genres_info
-                    else:
-                        return game_name, None, game_image, game_url, game_description, None
+                    # Steam fiyatını almak
+                    price_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=tr&l=us"
+                    async with session.get(price_url) as price_info_response:
+                        if price_info_response.status != 200:
+                            return game_name, "Fiyat bilgisi alınamadı.", game_image, game_url, game_description, None
+
+                        price_info_data = await price_info_response.json()
+                        game_data = price_info_data.get(str(game_id), {}).get("data", {})
+
+                        if "price_overview" in game_data:
+                            price_usd = float(game_data["price_overview"]["final"]) / 100  # Steam fiyatları cent olarak döndürüyor
+                            # Oyun türünü almak için
+                            genres = [genre["description"] for genre in game_data.get("genres", [])]
+                            genres_info = ', '.join(genres) if genres else "Bilinmiyor"
+
+                            return game_name, price_usd, game_image, game_url, game_description, genres_info
+                        else:
+                            return game_name, None, game_image, game_url, game_description, None
 
     @commands.command()
     async def game(self, ctx, *, game_name: str):
-        """Belirtilen oyunun Steam fiyatını embed mesaj olarak gösterir"""
+        """Belirtilen oyunun fiyatını ve açıklamasını embed mesaj olarak gösterir"""
         await ctx.send("🐱 **Kediler araştırıyor...** ⏳")
 
         game_name, price_usd, game_image, game_url, game_description, genres_info = await self.get_game_price(game_name)
