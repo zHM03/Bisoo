@@ -10,14 +10,13 @@ class SteamGame(commands.Cog):
 
     async def get_exchange_rate(self):
         """TCMB API'den USD/TRY döviz kuru bilgisini alır"""
-        url = "https://api.tcmb.gov.tr/evds/api/evds/data/USD.TRY?period=20250313,20250313&format=JSON&key=API_KEY"  # TCMB API URL'si
+        url = "https://api.exchangerate-api.com/v4/latest/USD"  # Üçüncü parti bir döviz API'si
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 if response.status != 200:
                     return None
                 data = await response.json()
-                # Döviz kuru verisini işleyip döndür
-                return float(data[0]["value"])
+                return data["rates"]["TRY"]
 
     async def get_game_price(self, game_name):
         """Steam API'den oyunun Türkiye fiyatını, kapak fotoğrafını ve detaylarını çeker"""
