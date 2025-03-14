@@ -15,7 +15,7 @@ class GameInfoCog(commands.Cog):
             # Steam API'den oyunların listesine erişiyoruz
             response = requests.get(search_url)
             data = response.json()
-            
+
             # Oyun adıyla eşleşen ID'yi bulalım
             game_id = None
             for game in data['applist']['apps']:
@@ -34,30 +34,30 @@ class GameInfoCog(commands.Cog):
             if not game_details[str(game_id)]['success']:
                 await ctx.send("Oyun bilgileri alınırken bir hata oluştu.")
                 return
-            
+
             game_data = game_details[str(game_id)]['data']
-            
+
             # Embed mesajını oluşturuyoruz
             game_info_embed = discord.Embed(
-                title=game_data['name'],
-                description=game_data['short_description'],
+                title=game_data.get('name', 'Bilinmeyen Oyun'),
+                description=game_data.get('short_description', 'Açıklama bulunamadı'),
                 color=discord.Color.blue()
             )
 
-            # Tür ve fiyat bilgilerini ekliyoruz
-            genres = ", ".join(genre['description'] for genre in game_data['genres']) if 'genres' in game_data else "Bilinmiyor"
-            price = "Bilinmiyor"
-            if 'price_overview' in game_data:
-                price = game_data['price_overview']['final_formatted']
-            
+            # Tür bilgisi
+            genres = ", ".join(genre['description'] for genre in game_data.get('genres', [])) or "Bilinmiyor"
             game_info_embed.add_field(name="Tür", value=genres, inline=False)
+
+            # Fiyat bilgisi
+            price = "Bilinmiyor"
+            if 'price_overview' in game_data and 'final_formatted' in game_data['price_overview']:
+                price = game_data['price_overview']['final_formatted']
             game_info_embed.add_field(name="Fiyat", value=price, inline=False)
 
-            # Oyuncu sayısı bilgisi için player count'ı kontrol edebiliriz
+            # Oyuncu sayısı bilgisi
             player_count = "Bilinmiyor"
             if 'players' in game_data:
                 player_count = game_data['players']
-            
             game_info_embed.add_field(name="Kaç Kişilik", value=player_count, inline=False)
 
             # Embed mesajını gönderiyoruz
