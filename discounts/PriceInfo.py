@@ -7,8 +7,8 @@ class SteamGame(commands.Cog):
         self.bot = bot
 
     async def get_game_price(self, game_name):
-        """Steam API'den oyunun fiyatını çeker"""
-        url = f"https://store.steampowered.com/api/storesearch/?term={game_name}&cc=us&l=en"
+        """Steam API'den oyunun Türkiye fiyatını çeker"""
+        url = f"https://store.steampowered.com/api/storesearch/?term={game_name}&cc=tr&l=tr"
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
@@ -25,7 +25,7 @@ class SteamGame(commands.Cog):
                 game_url = f"https://store.steampowered.com/app/{game_id}"
 
                 # Oyun fiyatını almak için yeni istek at
-                price_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=us&l=en"
+                price_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=tr&l=tr"
                 async with session.get(price_url) as price_response:
                     if price_response.status != 200:
                         return "Fiyat bilgisi alınamadı."
@@ -35,13 +35,13 @@ class SteamGame(commands.Cog):
 
                     if "price_overview" in game_data:
                         price = game_data["price_overview"]["final_formatted"]
-                        return f"**{game_name}** fiyatı: {price} USD\n[Steam Sayfası]({game_url})"
+                        return f"**{game_name}** fiyatı: {price} TL\n[Steam Sayfası]({game_url})"
                     else:
                         return f"**{game_name}** şu anda satılmıyor veya fiyat bilgisi yok.\n[Steam Sayfası]({game_url})"
 
     @commands.command()
     async def game(self, ctx, *, game_name: str):
-        """Belirtilen oyunun Steam fiyatını getirir"""
+        """Belirtilen oyunun Steam fiyatını getirir (Türkiye fiyatı)"""
         await ctx.send("Oyun fiyatı aranıyor... ⏳")
         price_info = await self.get_game_price(game_name)
         await ctx.send(price_info)
