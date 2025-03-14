@@ -53,15 +53,17 @@ class SteamGame(commands.Cog):
 
                     # Fiyat bilgisi
                     if "price_overview" in game_data:
-                        price = game_data["price_overview"]["final_formatted"]
+                        price_in_cents = game_data["price_overview"]["final"]  # **Cent cinsinden**
+                        usd_price = price_in_cents / 100  # **Gerçek dolara çevir**
+                        formatted_usd_price = f"${usd_price:.2f}"
+
+                        # Döviz kuru al ve TL'ye çevir
                         exchange_rate = await self.get_exchange_rate()
                         if exchange_rate:
-                            try:
-                                price_in_try = round(float(game_data["price_overview"]["final"]) * exchange_rate)
-                                price = f"{price} - {price_in_try} TL"
-                            except ValueError:
-                                pass  # Hatalı veri varsa geç
-
+                            price_in_try = round(usd_price * exchange_rate)  # **TL karşılığını hesapla**
+                            price = f"{formatted_usd_price} (~{price_in_try} TL)"
+                        else:
+                            price = formatted_usd_price
                     else:
                         price = "Bu oyun şu anda satılmıyor."
 
