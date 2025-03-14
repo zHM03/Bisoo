@@ -53,15 +53,26 @@ class SteamGame(commands.Cog):
 
                     # Fiyat bilgisi
                     if "price_overview" in game_data:
-                        price_in_cents = game_data["price_overview"]["final"]  # **Cent cinsinden**
+                        price_info = game_data["price_overview"]
+                        price_in_cents = price_info["final"]  # **Cent cinsinden**
+                        original_price_in_cents = price_info["initial"]  # **Orijinal fiyat**
+                        discount_percent = price_info["discount_percent"]  # **İndirim yüzdesi**
+
                         usd_price = price_in_cents / 100  # **Gerçek dolara çevir**
+                        original_usd_price = original_price_in_cents / 100  # **Orijinal fiyatı dolara çevir**
                         formatted_usd_price = f"${usd_price:.2f}"
+                        formatted_original_price = f"${original_usd_price:.2f}"
 
                         # Döviz kuru al ve TL'ye çevir
                         exchange_rate = await self.get_exchange_rate()
                         if exchange_rate:
                             price_in_try = round(usd_price * exchange_rate)  # **TL karşılığını hesapla**
+                            original_price_in_try = round(original_usd_price * exchange_rate)  # **Orijinal fiyat TL**
                             price = f"{formatted_usd_price} (~{price_in_try} TL)"
+
+                            if discount_percent > 0:
+                                price = f"💥 Şu an indirimde! **{formatted_usd_price} (~{price_in_try} TL)**\n" \
+                                        f"~~Önceki fiyat: {formatted_original_price} (~{original_price_in_try} TL)~~"
                         else:
                             price = formatted_usd_price
                     else:
