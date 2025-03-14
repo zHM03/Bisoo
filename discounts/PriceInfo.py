@@ -25,40 +25,45 @@ class SteamGame(commands.Cog):
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 if response.status != 200:
-                    return None, "Steam API'ye ulaşılamadı.", None
+                    return None, "Steam API'ye ulaşılamadı.", None, None, None, None
 
                 data = await response.json()
 
                 if not data["items"]:
-                    return None, "Oyun bulunamadı.", None
+                    return None, "Oyun bulunamadı.", None, None, None, None
 
                 game = data["items"][0]  # İlk sonucu al
                 game_id = game["id"]  # Steam oyun ID'si
                 game_name = game["name"]  # Oyunun tam adı
                 game_url = f"https://store.steampowered.com/app/{game_id}"
                 game_image = game["tiny_image"]  # Oyunun kapak fotoğrafı
+                game_description = game.get("short_description", "Açıklama bulunamadı.")  # Oyun açıklaması
 
                 # Oyun fiyatını almak için yeni istek at
                 price_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=tr&l=tr"
                 async with session.get(price_url) as price_response:
                     if price_response.status != 200:
-                        return game_name, "Fiyat bilgisi alınamadı.", game_image, game_url
+                        return game_name, "Fiyat bilgisi alınamadı.", game_image, game_url, game_description, None
 
                     price_data = await price_response.json()
                     game_data = price_data.get(str(game_id), {}).get("data", {})
 
                     if "price_overview" in game_data:
                         price_usd = float(game_data["price_overview"]["final"]) / 100  # Steam fiyatları cent olarak döndürüyor
-                        return game_name, price_usd, game_image, game_url
+                        # Oyun türünü almak için
+                        genres = [genre["description"] for genre in game_data.get("genres", [])]
+                        genres_info = ', '.join(genres) if genres else "Bilinmiyor"
+
+                        return game_name, price_usd, game_image, game_url, game_description, genres_info
                     else:
-                        return game_name, None, game_image, game_url
+                        return game_name, None, game_image, game_url, game_description, None
 
     @commands.command()
     async def game(self, ctx, *, game_name: str):
         """Belirtilen oyunun Steam fiyatını embed mesaj olarak gösterir"""
         await ctx.send("🐱 **Kediler araştırıyor...** ⏳")
 
-        game_name, price_usd, game_image, game_url = await self.get_game_price(game_name)
+        game_name, price_usd, game_image, game_url, game_description, genres_info = await self.get_game_price(game_name)
 
         if game_name is None:
             await ctx.send(price_usd)  # price_usd burada hata mesajı içeriyor
@@ -83,6 +88,9 @@ class SteamGame(commands.Cog):
             url=game_url
         )
         embed.set_thumbnail(url=game_image)
+        embed.add_field(name="Açıklama", value=game_description, inline=False)
+        embed.add_field(name="Türler", value=genres_info if genres_info else "Bilinmiyor", inline=False)
+
         embed.set_footer(text="😺 Oyun fiyatlarını kontrol etmek kediler için de önemli!")
 
         await ctx.send(embed=embed)
