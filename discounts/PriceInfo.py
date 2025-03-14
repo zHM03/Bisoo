@@ -37,7 +37,13 @@ class SteamGame(commands.Cog):
                 game_name = game["name"]  # Oyunun tam adı
                 game_url = f"https://store.steampowered.com/app/{game_id}"
                 game_image = game["tiny_image"]  # Oyunun kapak fotoğrafı
-                game_description = game.get("short_description", "Açıklama bulunamadı.")  # Oyun açıklaması
+                game_description = game.get("short_description", None)  # Oyun açıklamasını al
+
+                # Debug: API yanıtını yazdır
+                print(game)
+
+                if not game_description:
+                    game_description = game.get("detailed_description", "Açıklama bulunamadı.")  # Farklı bir açıklama alanını kontrol et
 
                 # Oyun fiyatını almak için yeni istek at
                 price_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=tr&l=us"
