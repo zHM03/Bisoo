@@ -51,9 +51,9 @@ class SteamGame(commands.Cog):
 
                         # İndirimli fiyat varsa
                         if discount_percent > 0:
-                            discount_message = f"İndirimli Fiyat: **{final_price} TL**\nOrijinal Fiyat: **{initial_price} TL**\nİndirim: %{discount_percent}"
+                            discount_message = f"İndirimli Fiyat: **{final_price} **\nOrijinal Fiyat: **{initial_price} **\nİndirim: %{discount_percent}"
                         else:
-                            discount_message = f"Fiyat: **{final_price} TL**"
+                            discount_message = f"Fiyat: **{final_price}**"
 
                         return game_name, discount_message, game_image, multiplayer, description_translated, discount_percent
                     else:
