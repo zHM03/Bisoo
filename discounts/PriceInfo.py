@@ -12,7 +12,8 @@ class GamePriceCog(commands.Cog):
         
         # API anahtarınızı buraya ekleyin
         api_key = "37d8ca093b6022f360d8e48ce69932797bc3c4e2"
-        url = f"https://api.isthereanydeal.com/lookup/prices/game/{game_title}/?key={api_key}"
+        # URL'yi doğru şekilde oluşturun
+        url = f"https://api.isthereanydeal.com/lookup/game/title/{game_title}/?key={api_key}"
 
         # API isteği gönderme
         response = requests.get(url)
