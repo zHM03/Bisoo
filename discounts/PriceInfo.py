@@ -9,19 +9,15 @@ class SteamGame(commands.Cog):
         self.translator = Translator()
 
     async def get_exchange_rate(self):
-        """Merkez Bankası API'sinden döviz kuru bilgisini alır"""
-        url = "https://api.exchangerate-api.com/v4/latest/USD"
+        """TCMB API'den USD/TRY döviz kuru bilgisini alır"""
+        url = "https://api.tcmb.gov.tr/evds/api/evds/data/USD.TRY?period=20250313,20250313&format=JSON&key=API_KEY"  # TCMB API URL'si
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    # USD/TRY kuru
-                    try:
-                        exchange_rate = data['rates']['TRY']
-                        return exchange_rate
-                    except KeyError:
-                        return None
-                return None
+                if response.status != 200:
+                    return None
+                data = await response.json()
+                # Döviz kuru verisini işleyip döndür
+                return float(data[0]["value"])
 
     async def get_game_price(self, game_name):
         """Steam API'den oyunun Türkiye fiyatını, kapak fotoğrafını ve detaylarını çeker"""
@@ -64,16 +60,15 @@ class SteamGame(commands.Cog):
                         initial_price = game_data["price_overview"].get("initial_formatted", "Bilinmiyor")
                         discount_percent = game_data["price_overview"].get("discount_percent", 0)
 
-                        # Döviz kuru oranını Merkez Bankası API'sinden alalım
+                        # Döviz kuru bilgisini al
                         exchange_rate = await self.get_exchange_rate()
-                        if exchange_rate is None:
-                            return game_name, "Döviz kuru bilgisi alınamadı.", game_image, multiplayer, description_translated, discount_percent
-
-                        # Steam'den gelen fiyatı al ve sayısal değeri al
-                        steam_price_usd = float(game_data["price_overview"]["final"].replace('$', '').strip())
-                        price_in_try = steam_price_usd * exchange_rate  # USD'den TRY'ye dönüştür
-                        price_in_try = round(price_in_try)  # TL fiyatını yuvarla
-                        final_price = f"${steam_price_usd} USD - {price_in_try} TL"  # Son fiyat formatı
+                        if exchange_rate:
+                            try:
+                                price_in_try = float(game_data["price_overview"]["final"]) * exchange_rate
+                                price_in_try = round(price_in_try)
+                                final_price = f"{final_price} - {price_in_try} TL"
+                            except ValueError:
+                                pass  # Hatalı veri varsa geç
 
                         # İndirimli fiyat varsa
                         if discount_percent > 0:
