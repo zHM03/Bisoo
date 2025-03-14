@@ -93,13 +93,13 @@ class SteamGame(commands.Cog):
 
         # Embed mesajı oluştur
         embed = discord.Embed(
-            title=f"🎮 {name}",
+            title=f"🎮 {name} 🎮",
             color=discord.Color.orange()
         )
         embed.set_thumbnail(url=image)
 
         # Sıralama: Açıklama → Tür → Fiyat
-        embed.add_field(name="📝 Açıklama", value=description, inline=False)
+        embed.add_field(name="📝 Bakalım bu oyun neymişşş", value=description, inline=False)
         embed.add_field(name="🎭 Tür", value=game_type, inline=False)
         embed.add_field(name="💰 Fiyat", value=price, inline=False)
 
