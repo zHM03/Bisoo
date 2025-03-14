@@ -8,6 +8,19 @@ class SteamGame(commands.Cog):
         self.bot = bot
         self.translator = Translator()
 
+    async def get_exchange_rate(self):
+        """TCMB API'den USD/TRY döviz kuru bilgisini alır"""
+        url = "https://api.tcmb.gov.tr/evds/api/series/TCMB/DK_TL?date=2025-03-14&format=JSON"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status != 200:
+                    return None
+                data = await response.json()
+                if data["data"]:
+                    return float(data["data"][0]["value"])  # Döviz kuru değeri
+                return None
+
     async def get_game_price(self, game_name):
         """Steam API'den oyunun Türkiye fiyatını, kapak fotoğrafını ve detaylarını çeker"""
         url = f"https://store.steampowered.com/api/storesearch/?term={game_name}&cc=tr&l=tr"
@@ -48,6 +61,16 @@ class SteamGame(commands.Cog):
                         final_price = game_data["price_overview"]["final_formatted"]
                         initial_price = game_data["price_overview"].get("initial_formatted", "Bilinmiyor")
                         discount_percent = game_data["price_overview"].get("discount_percent", 0)
+
+                        # Döviz kuru bilgisini al
+                        exchange_rate = await self.get_exchange_rate()
+                        if exchange_rate:
+                            try:
+                                price_in_try = float(game_data["price_overview"]["final"]) * exchange_rate
+                                price_in_try = round(price_in_try)
+                                final_price = f"{final_price} - {price_in_try} TL"
+                            except ValueError:
+                                pass  # Hatalı veri varsa geç
 
                         # İndirimli fiyat varsa
                         if discount_percent > 0:
