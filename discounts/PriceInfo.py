@@ -1,43 +1,50 @@
 import discord
 from discord.ext import commands
-import requests
-import urllib.parse
+import aiohttp
 
-class GamePriceCog(commands.Cog):
+class SteamGame(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="gameprice")
-    async def get_game_price(self, ctx, *, game_title: str):
-        """Belirtilen oyun için en iyi fiyatı gösterir"""
-        
-        # API anahtarınızı buraya ekleyin
-        api_key = "37d8ca093b6022f360d8e48ce69932797bc3c4e2"
-        # Oyun başlığını URL'ye düzgün şekilde entegre et
-        game_title_encoded = urllib.parse.quote(game_title)  # Başlıkta boşlukları ve özel karakterleri encode et
-        url = f"https://api.isthereanydeal.com/lookup/game/title/{game_title_encoded}/?key={api_key}"
+    async def get_game_price(self, game_name):
+        """Steam API'den oyunun fiyatını çeker"""
+        url = f"https://store.steampowered.com/api/storesearch/?term={game_name}&cc=us&l=en"
 
-        # API isteği gönderme
-        response = requests.get(url)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status != 200:
+                    return "Steam API'ye ulaşılamadı."
 
-        if response.status_code == 200:
-            data = response.json()
-            prices = data.get('data', {}).get('prices', [])
-            
-            if prices:
-                # En düşük fiyatı bul
-                best_price = min(prices, key=lambda x: x['price'])
-                best_store = best_price.get('shop', 'Bilinmiyor')
-                best_price_value = best_price.get('price', 'Bilinmiyor')
-                best_link = best_price.get('link', 'Bilinmiyor')
-                
-                # En iyi fiyatı Discord kanalında göster
-                await ctx.send(f"**{game_title}** için en iyi fiyat: {best_price_value} - {best_store}\nLink: {best_link}")
-            else:
-                await ctx.send("Fiyat bilgisi bulunamadı.")
-        else:
-            await ctx.send(f"Hata: {response.status_code}, API'ye bağlanılamadı.")
+                data = await response.json()
 
-# Botu başlatma
-async def setup(bot):
-    await bot.add_cog(GamePriceCog(bot))
+                if not data["items"]:
+                    return "Oyun bulunamadı."
+
+                game = data["items"][0]  # İlk sonucu al
+                game_id = game["id"]  # Steam oyun ID'si
+                game_url = f"https://store.steampowered.com/app/{game_id}"
+
+                # Oyun fiyatını almak için yeni istek at
+                price_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=us&l=en"
+                async with session.get(price_url) as price_response:
+                    if price_response.status != 200:
+                        return "Fiyat bilgisi alınamadı."
+
+                    price_data = await price_response.json()
+                    game_data = price_data.get(str(game_id), {}).get("data", {})
+
+                    if "price_overview" in game_data:
+                        price = game_data["price_overview"]["final_formatted"]
+                        return f"**{game_name}** fiyatı: {price} USD\n[Steam Sayfası]({game_url})"
+                    else:
+                        return f"**{game_name}** şu anda satılmıyor veya fiyat bilgisi yok.\n[Steam Sayfası]({game_url})"
+
+    @commands.command()
+    async def game(self, ctx, *, game_name: str):
+        """Belirtilen oyunun Steam fiyatını getirir"""
+        await ctx.send("Oyun fiyatı aranıyor... ⏳")
+        price_info = await self.get_game_price(game_name)
+        await ctx.send(price_info)
+
+def setup(bot):
+    bot.add_cog(SteamGame(bot))
