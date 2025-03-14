@@ -20,7 +20,7 @@ class SteamGame(commands.Cog):
 
     async def get_game_price(self, game_name):
         """Steam API'den oyunun ABD dolar fiyatını ve kapak fotoğrafını çeker"""
-        url = f"https://store.steampowered.com/api/storesearch/?term={game_name}&cc=tr&l=tr"
+        url = f"https://store.steampowered.com/api/storesearch/?term={game_name}&cc=us&l=us"
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
