@@ -8,6 +8,20 @@ class SteamGame(commands.Cog):
         self.bot = bot
         self.translator = Translator()
 
+    async def get_exchange_rate(self):
+        """Türkiye Merkez Bankası'ndan USD/TRY kuru çeker"""
+        url = "https://api.exchangerate-api.com/v4/latest/USD"  # Alternatif döviz kuru API'si
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status != 200:
+                    return None
+                data = await response.json()
+                try:
+                    exchange_rate = data['rates']['TRY']  # USD/TRY kuru
+                    return exchange_rate
+                except KeyError:
+                    return None
+
     async def get_game_price(self, game_name):
         """Steam API'den oyunun Türkiye fiyatını, kapak fotoğrafını ve detaylarını çeker"""
         url = f"https://store.steampowered.com/api/storesearch/?term={game_name}&cc=tr&l=tr"
@@ -49,11 +63,21 @@ class SteamGame(commands.Cog):
                         initial_price = game_data["price_overview"].get("initial_formatted", "Bilinmiyor")
                         discount_percent = game_data["price_overview"].get("discount_percent", 0)
 
+                        # Döviz kuru bilgisi alalım
+                        exchange_rate = await self.get_exchange_rate()
+                        if exchange_rate:
+                            # Fiyatları TL'ye çevirelim (USD'nin final fiyatını TL'ye çevirelim)
+                            final_price_usd = float(final_price.replace(" USD", ""))  # Fiyatı sayıya dönüştür
+                            final_price_try = final_price_usd * exchange_rate
+                            final_price_try_formatted = f"{final_price_try:,.2f} TL"
+                        else:
+                            final_price_try_formatted = "Fiyat bilgisi alınamadı"
+
                         # İndirimli fiyat varsa
                         if discount_percent > 0:
-                            discount_message = f"İndirimli Fiyat: **{final_price} **\nOrijinal Fiyat: **{initial_price} **\nİndirim: %{discount_percent}"
+                            discount_message = f"İndirimli Fiyat: **{final_price_try_formatted}**\nOrijinal Fiyat: **{initial_price}**\nİndirim: %{discount_percent}"
                         else:
-                            discount_message = f"Fiyat: **{final_price}**"
+                            discount_message = f"Fiyat: **{final_price_try_formatted}**"
 
                         return game_name, discount_message, game_image, multiplayer, description_translated, discount_percent
                     else:
