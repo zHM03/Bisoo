@@ -73,8 +73,8 @@ class SpecialDeals(commands.Cog):
             return
 
         embed = discord.Embed(
-            title="🐾 Kedi çılgınlığı Başladı! 🐾",
-            description="İndirimdeki oyunları kaçırma! 🏷️",
+            title="🐾 Bisooo İndirimli Mama Buldu! 🐾",
+            description="İndirimdeki mamaları kaçırma! 🏷️",
             color=discord.Color.orange()  # Kedi temalı yeşil renk
         )
 
