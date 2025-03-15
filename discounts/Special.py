@@ -49,7 +49,7 @@ class SpecialDeals(commands.Cog):
                     old_price_try = old_price * usd_try
                     new_price_try = new_price * usd_try
 
-                    # Cepte kalan parayı hesaplama
+                    # Cepte kalan parayı hesaplama (eski fiyat - yeni fiyat)
                     remaining_money = old_price_try - new_price_try
 
                     games.append({
