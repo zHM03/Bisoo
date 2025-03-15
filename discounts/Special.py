@@ -57,9 +57,9 @@ class SpecialDeals(commands.Cog):
                         "name": name,
                         "old_price": f"${old_price:.2f} ({old_price_try:.2f} TL)",
                         "new_price": f"${new_price:.2f} ({new_price_try:.2f} TL)",
+                        "url": url,
                         "discount_percentage": f"{discount_percentage:.0f}%",
-                        "savings": f"${savings:.2f} ({savings * usd_try:.2f} TL)",
-                        "url": url
+                        "savings": f"₺{savings * usd_try:.2f}"  # Tasarruf TL olarak
                     })
 
         return games
@@ -79,8 +79,8 @@ class SpecialDeals(commands.Cog):
             return
 
         embed = discord.Embed(
-            title="🐾 Kedi Çılgınlığı Başladı!🐾",
-            description="İndirimdeki Oyunları Kaçırma!🏷️ ",
+            title="🐾 Kedi Çılgınlığı Başladı! 🐾",
+            description="İndirimdeki Oyunları Kaçırma! 🎮🐱",
             color=discord.Color.orange()  # Kedi temalı mor renk
         )
 
@@ -88,7 +88,7 @@ class SpecialDeals(commands.Cog):
             embed.add_field(
                 name=f"🐾 {game['name']} 🐾",
                 value=f"Eski Fiyat: ~~{game['old_price']}~~\nYeni Fiyat: **{game['new_price']}**\n"
-                      f"İndirim: {game['discount_percentage']} 🐾\nKalan **{game['savings']}** ile mama alırım 😻\n"
+                      f"İndirim: **{game['discount_percentage']}**\nTasarruf: **{game['savings']}**\n"
                       f"[Yakala!]( {game['url']} )",
                 inline=False
             )
