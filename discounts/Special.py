@@ -7,8 +7,8 @@ class SpecialDeals(commands.Cog):
         self.bot = bot
 
     async def fetch_exchange_rate(self):
-        """TCMB API'sinden USD/TRY döviz kurunu çeker"""
-        url = "https://api.genelpara.com/embed/doviz.json"  # TCMB'nin güncel USD kuru veren bir API'si
+        """ExchangeRate-API'den USD/TRY kurunu alır"""
+        url = "https://api.exchangerate-api.com/v4/latest/USD"
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
@@ -17,7 +17,7 @@ class SpecialDeals(commands.Cog):
                 
                 data = await response.json()
                 try:
-                    usd_try = float(data["USD"]["satis"])  # Satış kurunu alıyoruz
+                    usd_try = float(data["rates"]["TRY"])
                     return usd_try
                 except (KeyError, ValueError):
                     return None
