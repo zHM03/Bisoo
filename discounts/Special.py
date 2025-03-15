@@ -49,14 +49,14 @@ class SpecialDeals(commands.Cog):
                     old_price_try = old_price * usd_try
                     new_price_try = new_price * usd_try
 
-                    # Tasarruf miktarını hesaplama
-                    savings = old_price_try - new_price_try
+                    # Cepte kalan parayı hesaplama
+                    remaining_money = old_price_try - new_price_try
 
                     games.append({
                         "name": name,
                         "old_price": f"${old_price:.2f} ({old_price_try:.2f} TL)",
                         "new_price": f"${new_price:.2f} ({new_price_try:.2f} TL)",
-                        "savings": f"{savings:.2f} TL",
+                        "remaining_money": f"${remaining_money:.2f} ({remaining_money:.2f} TL)",
                         "url": url
                     })
 
@@ -86,7 +86,7 @@ class SpecialDeals(commands.Cog):
             embed.add_field(
                 name=f"🐾 {game['name']} 🐾",
                 value=f"Eski Fiyat: ~~{game['old_price']}~~\nYeni Fiyat: **{game['new_price']}**\n"
-                      f"Tasarruf: **{game['savings']}**\n"
+                      f"Cepte Kalan Para: **{game['remaining_money']}**\n"
                       f"[Mama Sayfası]({game['url']})",
                 inline=False
             )
