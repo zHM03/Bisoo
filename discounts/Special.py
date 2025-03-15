@@ -73,20 +73,20 @@ class SpecialDeals(commands.Cog):
             return
 
         embed = discord.Embed(
-            title="😸 Kedi Çılgınlığı Başladı! İndirimdeki Oyunları Kaçırma! 🐾",
-            description="Indirimler sizi bekliyorrrr 🎮🐱",
-            color=discord.Color.purple()  # Kedi temalı mor renk
+            title="🐾 Kedi Çılgınlığı Başladı! 🐾",
+            description="İndirimdeki Oyunları Kaçırma! 🎮🐱",
+            color=discord.Color.orange()  # Kedi temalı mor renk
         )
 
         for game in games:
             embed.add_field(
                 name=f"🐾 {game['name']} 🐾",
-                value=f"Eski Fiyat: ~~{game['old_price']}~~ → Yeni Fiyat: **{game['new_price']}**\n"
-                      f"[🐱 Yakala! 🐾]( {game['url']} )",
+                value=f"Eski Fiyat: ~~{game['old_price']}~~\nYeni Fiyat: **{game['new_price']}**\n"
+                      f"[Yakala!]( {game['url']} )",
                 inline=False
             )
 
-        embed.set_footer(text="Purrfect Deals - Kedi gibi hızlı al! 😼")
+        embed.set_footer(text="İndirim yakalarken, bir kedinin fareyi yakaladığı kadar hızlı olmalısın 😼")
 
         await ctx.send(embed=embed)
 
