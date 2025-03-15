@@ -22,20 +22,22 @@ class SpecialDeals(commands.Cog):
                 except (KeyError, ValueError):
                     return None
 
-    async def fetch_steam_specials(self, usd_try):
+    async def fetch_steam_specials(self, usd_try, page, limit=10):
         """Steam'den indirimli oyunları alır ve TL fiyatlarını hesaplar"""
         url = "https://store.steampowered.com/api/featuredcategories"
+        games = []
+        start = (page - 1) * limit  # Sayfa numarasına göre başlangıç
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 if response.status != 200:
                     return None
-                
+
                 data = await response.json()
                 specials = data.get("specials", {}).get("items", [])
 
-                result = []
-                for game in specials[:20]:  # İlk 5 indirimli oyunu al
+                # İlk "start" oyununu atla ve "limit" kadar oyun al
+                for i, game in enumerate(specials[start:start + limit]):
                     name = game.get("name", "Bilinmiyor")
                     appid = game.get("id", "")
                     old_price = game.get("original_price", 0) / 100  # Cent -> Dolar
@@ -49,24 +51,24 @@ class SpecialDeals(commands.Cog):
                     old_price_try = old_price * usd_try
                     new_price_try = new_price * usd_try
 
-                    result.append({
+                    games.append({
                         "name": name,
                         "old_price": f"${old_price:.2f} ({old_price_try:.2f} TL)",
                         "new_price": f"${new_price:.2f} ({new_price_try:.2f} TL)",
                         "url": url
                     })
 
-                return result
+        return games
 
     @commands.command(name="special")
-    async def special(self, ctx):
+    async def special(self, ctx, page: int = 1):
         """Steam'deki indirimli oyunları listeler ve TL fiyatlarını hesaplar"""
         usd_try = await self.fetch_exchange_rate()
         if not usd_try:
             await ctx.send("USD/TRY kuru alınamadı, fiyatları sadece dolar olarak göstereceğim.")
             usd_try = 1  # Eğer kur alınamazsa TL çevirisi yapılmasın
 
-        games = await self.fetch_steam_specials(usd_try)
+        games = await self.fetch_steam_specials(usd_try, page)
 
         if not games:
             await ctx.send("Şu an Steam indirimli oyunlarını çekemedim.")
