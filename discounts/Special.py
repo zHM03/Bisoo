@@ -9,7 +9,7 @@ class SpecialDeals(commands.Cog):
     async def fetch_exchange_rate(self):
         """USD/TRY kuru almak için ExchangeRate-API'den veriyi çeker."""
         url = "https://api.exchangerate-api.com/v4/latest/USD"
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 if response.status != 200:
@@ -49,10 +49,16 @@ class SpecialDeals(commands.Cog):
                     old_price_try = old_price * usd_try
                     new_price_try = new_price * usd_try
 
+                    # İndirim yüzdesi ve tasarruf hesaplaması
+                    discount_percentage = ((old_price - new_price) / old_price) * 100
+                    savings = old_price - new_price
+
                     games.append({
                         "name": name,
                         "old_price": f"${old_price:.2f} ({old_price_try:.2f} TL)",
                         "new_price": f"${new_price:.2f} ({new_price_try:.2f} TL)",
+                        "discount_percentage": f"{discount_percentage:.0f}%",
+                        "savings": f"${savings:.2f} ({savings * usd_try:.2f} TL)",
                         "url": url
                     })
 
@@ -73,8 +79,8 @@ class SpecialDeals(commands.Cog):
             return
 
         embed = discord.Embed(
-            title="🐾 Kedi Çılgınlığı Başladı! 🐾",
-            description="İndirimdeki Oyunları Kaçırma! 🎮🐱",
+            title="🐾 Kedi Çılgınlığı Başladı!🐾",
+            description="İndirimdeki Oyunları Kaçırma!🏷️ ",
             color=discord.Color.orange()  # Kedi temalı mor renk
         )
 
@@ -82,6 +88,7 @@ class SpecialDeals(commands.Cog):
             embed.add_field(
                 name=f"🐾 {game['name']} 🐾",
                 value=f"Eski Fiyat: ~~{game['old_price']}~~\nYeni Fiyat: **{game['new_price']}**\n"
+                      f"İndirim: {game['discount_percentage']} 🐾\nKalan **{game['savings']}** ile mama alırım 😻\n"
                       f"[Yakala!]( {game['url']} )",
                 inline=False
             )
