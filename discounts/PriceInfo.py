@@ -33,12 +33,13 @@ class SteamGame(commands.Cog):
                 game = data["items"][0]
                 game_id = game["id"]
                 game_image = game["tiny_image"]
+                game_url = f"https://store.steampowered.com/app/{game_id}"  # Oyunun Steam sayfasının linki
 
                 # Fiyat ve detay bilgileri için ek API isteği
                 details_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=tr&l=tr"
                 async with session.get(details_url) as details_response:
                     if details_response.status != 200:
-                        return game["name"], "Fiyat bilgisi alınamadı.", game_image, "Bilinmiyor", "Açıklama yok."
+                        return game["name"], "Fiyat bilgisi alınamadı.", game_image, "Bilinmiyor", "Açıklama yok.", game_url
 
                     details_data = await details_response.json()
                     game_data = details_data.get(str(game_id), {}).get("data", {})
@@ -76,16 +77,15 @@ class SteamGame(commands.Cog):
                         else:
                             price = formatted_usd_price
                     else:
-                        price = "Bu mama şu anda satılmıyor."
+                        price = "Bu oyun şu anda satılmıyor."
 
-                    return game["name"], price, game_image, game_type, translated_desc
+                    return game["name"], price, game_image, game_type, translated_desc, game_url
 
     @commands.command()
     async def game(self, ctx, *, game_name: str):
         """Oyunun Steam fiyatı ve detaylarını embed içinde gösterir."""
-        await ctx.send("Araştırıyorummm... ⏳")
-
-        name, price, image, game_type, description = await self.get_game_info(game_name)
+        
+        name, price, image, game_type, description, game_url = await self.get_game_info(game_name)
 
         if name is None:
             await ctx.send(price)
@@ -99,9 +99,12 @@ class SteamGame(commands.Cog):
         embed.set_thumbnail(url=image)
 
         # Sıralama: Açıklama → Tür → Fiyat
-        embed.add_field(name="Bakalım bu mama neymişşş", value=description, inline=False)
+        embed.add_field(name="Bakalım bu oyun neymiş", value=description, inline=False)
         embed.add_field(name="Tür", value=game_type, inline=False)
         embed.add_field(name="Fiyat", value=price, inline=False)
+
+        # Fiyatların altında Steam linkini yazıyoruz
+        embed.description += f"\n[Steam Sayfası]({game_url})"  # Steam sayfasına yönlendiren linki ekliyoruz
 
         await ctx.send(embed=embed)
 
