@@ -28,6 +28,7 @@ async def on_ready():
     print('Bisooo göreve hazır')
     try:
         #discounts
+        await bot.load_extension('Special')
         await bot.load_extension('EpicGames') #epicgamesten bedava oyun alma
         await bot.load_extension('EmbedCheck')#discount kanalındaki tekrarlanan mesajları siler
         await bot.load_extension('PriceInfo')
