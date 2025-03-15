@@ -33,13 +33,12 @@ class SteamGame(commands.Cog):
                 game = data["items"][0]
                 game_id = game["id"]
                 game_image = game["tiny_image"]
-                game_url = f"https://store.steampowered.com/app/{game_id}"  # Oyunun Steam sayfasının linki
 
                 # Fiyat ve detay bilgileri için ek API isteği
                 details_url = f"https://store.steampowered.com/api/appdetails?appids={game_id}&cc=tr&l=tr"
                 async with session.get(details_url) as details_response:
                     if details_response.status != 200:
-                        return game["name"], "Fiyat bilgisi alınamadı.", game_image, "Bilinmiyor", "Açıklama yok.", game_url
+                        return game["name"], "Fiyat bilgisi alınamadı.", game_image, "Bilinmiyor", "Açıklama yok."
 
                     details_data = await details_response.json()
                     game_data = details_data.get(str(game_id), {}).get("data", {})
@@ -77,36 +76,40 @@ class SteamGame(commands.Cog):
                         else:
                             price = formatted_usd_price
                     else:
-                        price = "Bu oyun şu anda satılmıyor."
+                        price = "Bu mama şu anda satılmıyor."
 
-                    return game["name"], price, game_image, game_type, translated_desc, game_url
+                    # Steam sayfası linkini al
+                    steam_url = f"https://store.steampowered.com/app/{game_id}/"
 
-    @commands.command()
-    async def game(self, ctx, *, game_name: str):
-        """Oyunun Steam fiyatı ve detaylarını embed içinde gösterir."""
-        
-        name, price, image, game_type, description, game_url = await self.get_game_info(game_name)
+                    return game["name"], price, game_image, game_type, translated_desc, steam_url
 
-        if name is None:
-            await ctx.send(price)
-            return
+@commands.command()
+async def game(self, ctx, *, game_name: str):
+    """Oyunun Steam fiyatı ve detaylarını embed içinde gösterir."""
+    await ctx.send("Araştırıyorummm... ⏳")
 
-        # Embed mesajı oluştur
-        embed = discord.Embed(
-            title=f"🐾 {name} 🐾",
-            color=discord.Color.orange()
-        )
-        embed.set_thumbnail(url=image)
+    name, price, image, game_type, description, steam_url = await self.get_game_info(game_name)
 
-        # Sıralama: Açıklama → Tür → Fiyat
-        embed.add_field(name="Bakalım bu oyun neymiş", value=description, inline=False)
-        embed.add_field(name="Tür", value=game_type, inline=False)
-        embed.add_field(name="Fiyat", value=price, inline=False)
+    if name is None:
+        await ctx.send(price)
+        return
 
-        # Fiyatların altında Steam linkini yazıyoruz
-        embed.description += f"\n[Steam Sayfası]({game_url})"  # Steam sayfasına yönlendiren linki ekliyoruz
+    # Embed mesajı oluştur
+    embed = discord.Embed(
+        title=f"🐾 {name} 🐾",
+        color=discord.Color.orange()
+    )
+    embed.set_thumbnail(url=image)
 
-        await ctx.send(embed=embed)
+    # Sıralama: Açıklama → Tür → Fiyat
+    embed.add_field(name="Bakalım bu mama neymişşş", value=description, inline=False)
+    embed.add_field(name="Tür", value=game_type, inline=False)
+    embed.add_field(name="Fiyat", value=price, inline=False)
+
+    # Steam sayfası linkini fiyatın altına ekle
+    embed.add_field(name="Steam Sayfası", value=f"[Buraya tıklayarak ulaşabilirsiniz]({steam_url})", inline=False)
+
+    await ctx.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(SteamGame(bot))
