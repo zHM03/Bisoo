@@ -22,7 +22,7 @@ class SpecialDeals(commands.Cog):
                 except (KeyError, ValueError):
                     return None
 
-    async def fetch_steam_specials(self, usd_try, start_index, limit=10):
+    async def fetch_steam_specials(self, usd_try):
         """Steam'den indirimli oyunları alır ve TL fiyatlarını hesaplar."""
         url = f"https://store.steampowered.com/api/featuredcategories"
         games = []
@@ -35,8 +35,7 @@ class SpecialDeals(commands.Cog):
                 data = await response.json()
                 specials = data.get("specials", {}).get("items", [])
 
-                # Start index'e göre oyunları al
-                for i, game in enumerate(specials[start_index:start_index + limit]):
+                for i, game in enumerate(specials[:10]):  # Yalnızca ilk 10 oyunu alıyoruz
                     name = game.get("name", "Bilinmiyor")
                     appid = game.get("id", "")
                     old_price = game.get("original_price", 0) / 100  # Cent -> Dolar
@@ -60,29 +59,34 @@ class SpecialDeals(commands.Cog):
         return games
 
     @commands.command(name="special")
-    async def special(self, ctx, page: int = 1):
+    async def special(self, ctx):
         """Steam'deki indirimli oyunları listeler ve TL fiyatlarını hesaplar"""
         usd_try = await self.fetch_exchange_rate()
         if not usd_try:
             await ctx.send("USD/TRY kuru alınamadı, fiyatları sadece dolar olarak göstereceğim.")
             usd_try = 1  # Eğer kur alınamazsa TL çevirisi yapılmasın
 
-        # Sayfa numarasına göre başlangıç index'ini ayarlıyoruz
-        start_index = (page - 1) * 10  # Her sayfa için 10 oyun
-        games = await self.fetch_steam_specials(usd_try, start_index)
+        games = await self.fetch_steam_specials(usd_try)
 
         if not games:
-            await ctx.send("Şu an Steam indirimli oyunlarını çekemedim.")
+            await ctx.send("Şu an Steam indirimli oyunlarını çekemedim. 😿 Bazen kediler de hata yapar.")
             return
 
-        embed = discord.Embed(title="🛒 Steam İndirimli Oyunlar", color=discord.Color.blue())
+        embed = discord.Embed(
+            title="😸 Kedi Çılgınlığı Başladı! İndirimdeki Oyunları Kaçırma! 🐾",
+            description="Indirimler sizi bekliyorrrr 🎮🐱",
+            color=discord.Color.purple()  # Kedi temalı mor renk
+        )
 
         for game in games:
             embed.add_field(
-                name=game["name"],
-                value=f"~~{game['old_price']}~~ → **{game['new_price']}**\n[Steam Sayfası]({game['url']})",
+                name=f"🐾 {game['name']} 🐾",
+                value=f"Eski Fiyat: ~~{game['old_price']}~~ → Yeni Fiyat: **{game['new_price']}**\n"
+                      f"[🐱 Yakala! 🐾]( {game['url']} )",
                 inline=False
             )
+
+        embed.set_footer(text="Purrfect Deals - Kedi gibi hızlı al! 😼")
 
         await ctx.send(embed=embed)
 
