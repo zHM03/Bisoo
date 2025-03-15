@@ -71,12 +71,12 @@ class SteamGame(commands.Cog):
                             price = f"{formatted_usd_price} (~{price_in_try} TL)"
 
                             if discount_percent > 0:
-                                price = f"💥 Şu an indirimde! **{formatted_usd_price} (~{price_in_try} TL)**\n" \
-                                        f"Önceki fiyat: {formatted_original_price} (~{original_price_in_try} TL)"
+                                price = f"Şu an indirimde! **{formatted_usd_price} (~{price_in_try} TL)**\n" \
+                                        f"Önceki fiyat: ~~{formatted_original_price} (~{original_price_in_try} TL~~)"
                         else:
                             price = formatted_usd_price
                     else:
-                        price = "Bu oyun şu anda satılmıyor."
+                        price = "Bu mama şu anda satılmıyor."
 
                     return game["name"], price, game_image, game_type, translated_desc
 
@@ -93,15 +93,15 @@ class SteamGame(commands.Cog):
 
         # Embed mesajı oluştur
         embed = discord.Embed(
-            title=f"🎮 {name} 🎮",
+            title=f"🐾 {name} 🐾",
             color=discord.Color.orange()
         )
         embed.set_thumbnail(url=image)
 
         # Sıralama: Açıklama → Tür → Fiyat
-        embed.add_field(name="📝 Bakalım bu oyun neymişşş", value=description, inline=False)
-        embed.add_field(name="🎭 Tür", value=game_type, inline=False)
-        embed.add_field(name="💰 Fiyat", value=price, inline=False)
+        embed.add_field(name="Bakalım bu mama neymişşş", value=description, inline=False)
+        embed.add_field(name="Tür", value=game_type, inline=False)
+        embed.add_field(name="Fiyat", value=price, inline=False)
 
         await ctx.send(embed=embed)
 
