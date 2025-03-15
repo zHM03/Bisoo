@@ -69,24 +69,24 @@ class SpecialDeals(commands.Cog):
         games = await self.fetch_steam_specials(usd_try)
 
         if not games:
-            await ctx.send("Şu an Steam indirimli oyunlarını çekemedim. 😿 Bazen kediler de hata yapar.")
+            await ctx.send("Şu an Steam indirimli oyunlarını çekemedim.")
             return
 
         embed = discord.Embed(
-            title="😸 Kedi Çılgınlığı Başladı! İndirimdeki Oyunları Kaçırma! 🐾",
-            description="Kediler bile indirime girdi, sen ne duruyorsun? İndirimli oyunları kap! 🎮🐱",
-            color=discord.Color.purple()  # Kedi temalı mor renk
+            title="🐾 Kedi Oyunları: Steam İndirimli Oyunlar! 🐱",
+            description="İndirimdeki kedi gibi hızlı oyunları kaçırma! 😻",
+            color=discord.Color.green()  # Kedi temalı yeşil renk
         )
 
         for game in games:
             embed.add_field(
                 name=f"🐾 {game['name']} 🐾",
                 value=f"Eski Fiyat: ~~{game['old_price']}~~ → Yeni Fiyat: **{game['new_price']}**\n"
-                      f"[🐱 Tıklayıp Hızla Al! 🐾]( {game['url']} )",
+                      f"[Steam Sayfası]({game['url']})",
                 inline=False
             )
 
-        embed.set_footer(text="Purrfect Deals - Kedi gibi hızlı al! 😼")
+        embed.set_footer(text="Feline Deals - Oyun dünyasının kedisi burada! 🐾")
 
         await ctx.send(embed=embed)
 
