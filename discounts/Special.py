@@ -82,7 +82,7 @@ class SpecialDeals(commands.Cog):
             embed.add_field(
                 name=f"🐾 {game['name']} 🐾",
                 value=f"Eski Fiyat: ~~{game['old_price']}~~\nYeni Fiyat: **{game['new_price']}**\n"
-                      f"[Steam Sayfası]({game['url']})",
+                      f"[Mama Sayfası]({game['url']})",
                 inline=False
             )
 
