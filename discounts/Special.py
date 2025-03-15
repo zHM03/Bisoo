@@ -22,7 +22,7 @@ class SpecialDeals(commands.Cog):
                 except (KeyError, ValueError):
                     return None
 
-    async def fetch_steam_specials(self, usd_try):
+    async def fetch_steam_specials(self, usd_try, limit=5):
         """Steam'den indirimli oyunları alır ve TL fiyatlarını hesaplar"""
         url = "https://store.steampowered.com/api/featuredcategories"
 
@@ -35,7 +35,7 @@ class SpecialDeals(commands.Cog):
                 specials = data.get("specials", {}).get("items", [])
 
                 result = []
-                for game in specials[:5]:  # İlk 5 indirimli oyunu al
+                for game in specials[:limit]:  # Kullanıcı istediği kadar oyun al
                     name = game.get("name", "Bilinmiyor")
                     appid = game.get("id", "")
                     old_price = game.get("original_price", 0) / 100  # Cent -> Dolar
@@ -59,14 +59,14 @@ class SpecialDeals(commands.Cog):
                 return result
 
     @commands.command(name="special")
-    async def special(self, ctx):
+    async def special(self, ctx, number_of_games: int = 5):
         """Steam'deki indirimli oyunları listeler ve TL fiyatlarını hesaplar"""
         usd_try = await self.fetch_exchange_rate()
         if not usd_try:
             await ctx.send("USD/TRY kuru alınamadı, fiyatları sadece dolar olarak göstereceğim.")
             usd_try = 1  # Eğer kur alınamazsa TL çevirisi yapılmasın
 
-        games = await self.fetch_steam_specials(usd_try)
+        games = await self.fetch_steam_specials(usd_try, limit=number_of_games)
 
         if not games:
             await ctx.send("Şu an Steam indirimli oyunlarını çekemedim.")
