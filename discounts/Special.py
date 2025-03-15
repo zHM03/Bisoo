@@ -22,8 +22,41 @@ class SpecialDeals(commands.Cog):
                 except (KeyError, ValueError):
                     return None
 
+    async def fetch_game_price(self, game_name, usd_try):
+        """Steam API üzerinden oyun fiyatını alır."""
+        search_url = f"https://store.steampowered.com/api/storesearch/?term={game_name}&cc=tr&l=tr"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(search_url) as response:
+                if response.status != 200:
+                    return None
+
+                data = await response.json()
+                if "items" not in data or len(data["items"]) == 0:
+                    return None
+
+                game = data["items"][0]  # İlk bulduğumuz oyunu alıyoruz
+                appid = game.get("id", "")
+                name = game.get("name", "Bilinmiyor")
+                old_price = game.get("original_price", 0) / 100  # Cent -> Dolar
+                new_price = game.get("final_price", 0) / 100  # Cent -> Dolar
+                url = f"https://store.steampowered.com/app/{appid}"
+
+                if old_price == 0 or new_price == 0:
+                    return None  # Hatalı fiyat verilerini atla
+
+                # TL'ye çevirme
+                old_price_try = old_price * usd_try
+                new_price_try = new_price * usd_try
+
+                return {
+                    "name": name,
+                    "old_price": f"${old_price:.2f} ({old_price_try:.2f} TL)",
+                    "new_price": f"${new_price:.2f} ({new_price_try:.2f} TL)",
+                    "url": url
+                }
+
     async def fetch_steam_specials(self, usd_try):
-        """Steam'den indirimli oyunları alır ve TL fiyatlarını hesaplar."""
+        """Steam'deki ilk 10 indirimli oyunu listeler ve fiyatlarını TL'ye çevirir."""
         url = "https://store.steampowered.com/api/featuredcategories"
         games = []
 
@@ -36,25 +69,11 @@ class SpecialDeals(commands.Cog):
                 specials = data.get("specials", {}).get("items", [])
 
                 for i, game in enumerate(specials[:10]):  # Yalnızca ilk 10 oyunu alıyoruz
-                    name = game.get("name", "Bilinmiyor")
-                    appid = game.get("id", "")
-                    old_price = game.get("original_price", 0) / 100  # Cent -> Dolar
-                    new_price = game.get("final_price", 0) / 100  # Cent -> Dolar
-                    url = f"https://store.steampowered.com/app/{appid}"
+                    game_name = game.get("name", "Bilinmiyor")
+                    game_data = await self.fetch_game_price(game_name, usd_try)
 
-                    if old_price == 0 or new_price == 0:
-                        continue  # Hatalı fiyat verilerini atla
-
-                    # TL'ye çevirme
-                    old_price_try = old_price * usd_try
-                    new_price_try = new_price * usd_try
-
-                    games.append({
-                        "name": name,
-                        "old_price": f"${old_price:.2f} ({old_price_try:.2f} TL)",
-                        "new_price": f"${new_price:.2f} ({new_price_try:.2f} TL)",
-                        "url": url
-                    })
+                    if game_data:
+                        games.append(game_data)
 
         return games
 
