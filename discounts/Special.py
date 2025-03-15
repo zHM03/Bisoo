@@ -35,7 +35,7 @@ class SpecialDeals(commands.Cog):
                 specials = data.get("specials", {}).get("items", [])
 
                 result = []
-                for game in specials[:5]:  # İlk 5 indirimli oyunu al
+                for game in specials[:20]:  # İlk 5 indirimli oyunu al
                     name = game.get("name", "Bilinmiyor")
                     appid = game.get("id", "")
                     old_price = game.get("original_price", 0) / 100  # Cent -> Dolar
