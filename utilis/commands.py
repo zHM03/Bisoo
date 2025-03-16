@@ -18,10 +18,10 @@ class Commands(commands.Cog):
         embed.add_field(
             name="🎶 Mırnav Melodileri 🎶",
             value=(
-                "**!p** ***`<şarkı adı / YouTube linki>` → Tırnaklarımla plağı çeviriyorum***\n"
-                "**!s** → ***Şşş... Biraz uyku vakti***\n"
-                "**!r** → ***Miyav! Parti devam etsin***\n"
-                "**!l** → ***Mırlamadan uzaklaşıyorum***\n"
+                "***!p*** *`<şarkı adı / YouTube linki>` → Tırnaklarımla plağı çeviriyorum*\n"
+                "***!s*** → *Şşş... Biraz uyku vakti*\n"
+                "***!r*** → *Miyav! Parti devam etsin*\n"
+                "***!l*** → *Mırlamadan uzaklaşıyorum*\n"
             ),
             inline=False
         )
@@ -30,9 +30,9 @@ class Commands(commands.Cog):
         embed.add_field(
             name="🎮 Oyun Komutları 🎮",
             value=(
-                "**!profile** `<Steam kullanıcı adı / Steam profil linki>` → Profilini çizerim\n"
-                "**!game** `<Oyun ismi>` → Mama bilgileri getiririm \n"
-                "**!special** İndirimli mamaları getiririm (Belki bana mama alırısn)\n"
+                "***!profile***→ `*<Steam kullanıcı adı / Steam profil linki>` → Profilini çizerim*\n"
+                "***!game***→ `*<Oyun ismi>` → Mama bilgileri getiririm*\n"
+                "***!special***→ *İndirimli mamaları getiririm (Belki bana mama alırısn)*\n"
             ),
             inline=False
         )  # <--- BURASI EKLENDİ!
@@ -41,9 +41,9 @@ class Commands(commands.Cog):
         embed.add_field(
             name="😸 Eğlenceli Komutlar 😸",
             value=(
-                "**!j** → Biraz kahkaha iyidir! Miyav-miyav bir şaka geliyor\n"
-                "**!kedy** → Pati dostlarımı ifşa ediyorum!\n"
-                "**!wallpaper** →<resim> Patilerimle resim çizerim!\n"
+                "***!j*** → *Biraz kahkaha iyidir! Miyav-miyav bir şaka geliyor*\n"
+                "***!kedy*** → *Pati dostlarımı ifşa ediyorum!*\n"
+                "***!wallpaper*** →*<resim> Patilerimle resim çizerim!*\n"
             ),
             inline=False
         )
@@ -52,9 +52,9 @@ class Commands(commands.Cog):
         embed.add_field(
             name="🐾 Patisyonel Komutlar 🐾",
             value=(
-                "**!h** `<şehir>` → Hava nasıl, biliyor musun? Ben de bilmiyorum! Ama öğrenebiliriz...\n"
-                "**!crypto** `<coin>` → Coin fiyatını gösteririm (Mama parası lazım!)\n"
-                "**!wheel** `<2 seçenek>` → Çark çeviririmmm\n"
+                "***!h*** *`<şehir>` → Hava nasıl, biliyor musun? Ben de bilmiyorum! Ama öğrenebiliriz...*\n"
+                "***!crypto*** *`<coin>` → Coin fiyatını gösteririm (Mama parası lazım!)*\n"
+                "***!wheel*** *`<2 seçenek>` → Çark çeviririmmm*\n"
             ),
             inline=False
         )
