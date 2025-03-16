@@ -31,7 +31,8 @@ class Commands(commands.Cog):
             name="🎮 Oyun Komutları 🎮",
             value=(
                 "**!profile** `<Steam kullanıcı adı / Steam profil linki>` → Profilini çizerim\n"
-                "**!game** `<Oyun ismi>` → Oyun bilgileri getiririm \n"
+                "**!game** `<Oyun ismi>` → Mama bilgileri getiririm \n"
+                "**!special** İndirimli mamaları getiririm (Belki bana mama alırısn)\n"
             ),
             inline=False
         )  # <--- BURASI EKLENDİ!
