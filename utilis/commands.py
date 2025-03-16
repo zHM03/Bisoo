@@ -18,10 +18,10 @@ class Commands(commands.Cog):
         embed.add_field(
             name="🎶 Mırnav Melodileri 🎶",
             value=(
-                "**!p** `<şarkı adı / YouTube linki>` → Tırnaklarımla plağı çeviriyorum\n"
-                "**!s** → Şşş... Biraz uyku vakti\n"
-                "**!r** → Miyav! Parti devam etsin\n"
-                "**!l** → Mırlamadan uzaklaşıyorum\n"
+                "**!p** ***`<şarkı adı / YouTube linki>` → Tırnaklarımla plağı çeviriyorum***\n"
+                "**!s** → ***Şşş... Biraz uyku vakti***\n"
+                "**!r** → ***Miyav! Parti devam etsin***\n"
+                "**!l** → ***Mırlamadan uzaklaşıyorum***\n"
             ),
             inline=False
         )
