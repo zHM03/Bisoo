@@ -30,8 +30,8 @@ class Commands(commands.Cog):
         embed.add_field(
             name="🎮 Oyun Komutları 🎮",
             value=(
-                "***!profile***→ `*<Steam kullanıcı adı / Steam profil linki>` → Profilini çizerim*\n"
-                "***!game***→ `*<Oyun ismi>` → Mama bilgileri getiririm*\n"
+                "***!profile***→ *<Steam kullanıcı adı / Steam profil linki> → Profilini çizerim*\n"
+                "***!game***→ *<Oyun ismi> → Mama bilgileri getiririm*\n"
                 "***!special***→ *İndirimli mamaları getiririm (Belki bana mama alırısn)*\n"
             ),
             inline=False
