@@ -61,34 +61,6 @@ class Crypto(commands.Cog):
         self.send_daily_price.cancel()
         self.keep_alive.cancel()
 
-    @tasks.loop(minutes=1)
-    async def send_daily_price(self):
-        """Her gün 00:00'da BTC fiyatını gönderir"""
-        now = datetime.datetime.utcnow() + datetime.timedelta(hours=3)  # Türkiye saati
-        if now.hour == 0 and now.minute == 0:
-            channel = self.bot.get_channel(PRICE_CHANNEL_ID)
-            if channel:
-                price_usd, price_try = get_crypto_price("BTC")
-                if price_usd and price_try:
-                    formatted_usd = format_price(price_usd)
-                    formatted_try = format_price(price_try)
-                    embed = discord.Embed(
-                        title="🐱 24 Saatlik BTC Fiyatı 🐾",
-                        description=f"**${formatted_usd}** /**₺{formatted_try}**\n\n*Bu fiyatlar sadece bilgi amaçlıdır. YTD!*",
-                        color=discord.Color.gold()
-                    )
-                    embed.set_footer(text="Meow meow, kripto dünyası seni bekliyor!")
-                    await channel.send(embed=embed)
-                else:
-                    await log_error(self.bot, "BTC fiyatı alınamadı.")
-
-    @tasks.loop(minutes=10)
-    async def keep_alive(self):
-        """Bot'un Railway tarafından kapatılmasını önler"""
-        log_channel = self.bot.get_channel(LOG_CHANNEL_ID)
-        if log_channel:
-            await log_channel.send("✅ **Bot hala çalışıyor...**")
-
     @commands.command()
     async def crypto(self, ctx, coin: str = None):
         """Coin fiyatlarını gösterir. Eğer coin belirtilmezse en popüler 10 coini gösterir."""
