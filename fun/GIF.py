@@ -48,7 +48,7 @@ class Giphy(commands.Cog):
         GIPHY_API_KEY = os.getenv('GIPHY_API_KEY')  # .env dosyasından API anahtarını al
         GIPHY_API_URL = 'https://api.giphy.com/v1/gifs/search'
 
-        query = 'cat'  # Kedi GIF'leri arıyoruz
+        query = 'funny cat'  # Kedi GIF'leri arıyoruz
         params = {
             'api_key': GIPHY_API_KEY,
             'q': query,
